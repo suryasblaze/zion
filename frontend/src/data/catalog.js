@@ -1,0 +1,271 @@
+/**
+ * Local mirror of db/seed_products.sql.
+ *
+ * The storefront prefers the live API. This is what it falls back to when
+ * the API is unreachable, so `npm run dev` shows a complete, honest site
+ * before Supabase is wired up. Once the backend is running, the API wins
+ * and this is never read.
+ */
+
+export const TEAS = [
+  {
+    slug: 'butterfly-pea',
+    name: 'Butterfly Pea',
+    script: 'Pea Tea',
+    botanical: 'Clitoria ternatea',
+    tagline: "Nature's blue elixir",
+    cup: 'Indigo',
+    accent: '#2B3F8C',
+    accentDeep: '#23336F',
+    image: '/products/butterfly-pea.jpg',
+    tile: '/products/butterfly-pea-tile.jpg',
+    price: 349,
+    mrp: 399,
+    brew: { temp: 90, minutes: 4 },
+    short:
+      'A vivid blue infusion of whole butterfly pea flowers. Turns violet the moment you add lime.',
+    long:
+      'Butterfly pea flowers give up their colour in about thirty seconds — a deep, unmistakable indigo used across South and Southeast Asia for centuries, as a dye and as a daily tonic. The flavour is soft and faintly earthy, closer to a fine green tea than to anything floral.',
+    benefits: [
+      ['Rich in antioxidants', 'Anthocyanins help the body handle free radicals.'],
+      ['Supports eye health', 'Traditionally taken to improve vision and reduce strain.'],
+      ['Enhances brain function', 'Long used to support memory, focus and clarity.'],
+      ['Healthy skin support', 'Antioxidants that help promote collagen and a natural glow.'],
+      ['Supports weight management', 'A calorie-free cup inside a balanced diet.'],
+    ],
+    sizes: [
+      { sku: 'ZH-BP-100', label: '100 g', price: 349, mrp: 399 },
+      { sku: 'ZH-BP-250', label: '250 g', price: 749, mrp: 899 },
+    ],
+  },
+  {
+    slug: 'hibiscus',
+    name: 'Hibiscus',
+    script: 'Herbal Tea',
+    botanical: 'Hibiscus sabdariffa',
+    tagline: "Heart's natural care",
+    cup: 'Crimson',
+    accent: '#9E1B32',
+    accentDeep: '#85162A',
+    image: '/products/hibiscus.jpg',
+    tile: '/products/hibiscus-tile.jpg',
+    price: 299,
+    mrp: 349,
+    brew: { temp: 95, minutes: 5 },
+    short:
+      'Hand-picked hibiscus calyces. Deep crimson, bright and tart, and very good over ice.',
+    long:
+      'Hibiscus brews the colour of garnet and tastes like cranberry with the sugar taken out — sharp, clean, genuinely refreshing. The difference between good and ordinary is when the calyx is picked and how fast it is dried. Ours are dried within hours of harvest.',
+    benefits: [
+      ['Rich in antioxidants', 'Helps fight free radicals and supports immunity.'],
+      ['Supports heart health', 'Traditionally taken to help maintain healthy blood pressure.'],
+      ['Aids weight management', 'Supports metabolism and a healthy weight.'],
+      ['Refreshes and relieves stress', 'Natural calming properties that help you unwind.'],
+      ['Supports immunity', 'Packed with Vitamin C.'],
+    ],
+    sizes: [
+      { sku: 'ZH-HB-100', label: '100 g', price: 299, mrp: 349 },
+      { sku: 'ZH-HB-250', label: '250 g', price: 649, mrp: 799 },
+    ],
+  },
+  {
+    slug: 'chamomile',
+    name: 'Chamomile',
+    script: 'Herbal Tea',
+    botanical: 'Matricaria chamomilla',
+    tagline: "Nature's calm in every sip",
+    cup: 'Amber',
+    accent: '#D9A21B',
+    accentDeep: '#8A6408',
+    image: '/products/chamomile.jpg',
+    tile: '/products/chamomile-tile.jpg',
+    price: 399,
+    mrp: 449,
+    brew: { temp: 90, minutes: 5 },
+    short:
+      'Whole chamomile flower heads. Soft, honeyed, and the most forgiving tea to brew.',
+    long:
+      'We buy whole flower heads and never mill them. Chamomile’s aromatic oils sit in the yellow disc at the centre of the flower and escape within days of grinding — which is why most chamomile tastes of very little. You can still see individual flowers in this tin.',
+    benefits: [
+      ['Relieves stress and anxiety', 'Helps calm the mind and promote relaxation.'],
+      ['Promotes better sleep', 'Supports restful sleep and improves sleep quality.'],
+      ['Supports digestion', 'Soothes the gut and helps relieve bloating.'],
+      ['Healthy skin support', 'Antioxidants that promote clear, healthy skin.'],
+      ['Boosts immunity', 'Strengthens the body’s natural defences.'],
+    ],
+    sizes: [
+      { sku: 'ZH-CM-100', label: '100 g', price: 399, mrp: 449 },
+      { sku: 'ZH-CM-250', label: '250 g', price: 899, mrp: 1049 },
+    ],
+  },
+  {
+    slug: 'lavender',
+    name: 'Lavender',
+    script: 'Herbal Infusion',
+    botanical: 'Lavandula angustifolia',
+    tagline: 'Calm mind, peaceful you',
+    cup: 'Violet',
+    accent: '#6B4E9B',
+    accentDeep: '#574080',
+    image: '/products/lavender.jpg',
+    tile: '/products/lavender-tile.jpg',
+    price: 449,
+    mrp: 529,
+    brew: { temp: 85, minutes: 3 },
+    short:
+      'Culinary-grade lavender buds. Floral and clean, with none of the soapiness of the cheap stuff.',
+    long:
+      'Lavender divides people, almost always because they have had a bad one. Brewed briefly and lightly, culinary-grade Lavandula angustifolia tastes like a summer field. The trick is restraint: half the leaf and half the time you would give anything else here.',
+    benefits: [
+      ['Relieves stress and anxiety', 'Calms the mind and promotes a sense of ease.'],
+      ['Promotes better sleep', 'Supports restful sleep naturally.'],
+      ['Supports digestion', 'Helps soothe the digestive system.'],
+      ['Healthy skin support', 'Rich in antioxidants.'],
+      ['Boosts immunity', 'Supports the body’s natural defences.'],
+    ],
+    sizes: [
+      { sku: 'ZH-LV-100', label: '100 g', price: 449, mrp: 529 },
+      { sku: 'ZH-LV-250', label: '250 g', price: 999, mrp: 1199 },
+    ],
+  },
+  {
+    slug: 'nannari',
+    name: 'Nannari',
+    script: 'Herbal Tea',
+    botanical: 'Hemidesmus indicus',
+    tagline: 'Rooted in tradition',
+    cup: 'Russet',
+    accent: '#8A4B24',
+    accentDeep: '#743E1E',
+    image: '/products/nannari.jpg',
+    tile: '/products/nannari-tile.jpg',
+    price: 279,
+    mrp: 329,
+    brew: { temp: 100, minutes: 8 },
+    tamil: 'நன்னாரி',
+    short:
+      'Indian sarsaparilla root. The body coolant every Tamil household already knows.',
+    long:
+      'If you grew up in Tamil Nadu you have had nannari, most likely as sherbet on a hot afternoon. As a tea it is woody and faintly vanilla-sweet, with the cooling finish that made it a summer staple long before anyone called it wellness.',
+    benefits: [
+      ['Natural body coolant', 'Helps cool the body and reduce heat stress.'],
+      ['Supports digestion', 'Aids digestion and relieves bloating.'],
+      ['Healthy skin support', 'Helps detoxify and promote clear skin.'],
+      ['Boosts immunity', 'Strengthens the immune system.'],
+      ['Relieves stress', 'Calms the mind and supports mental wellbeing.'],
+    ],
+    sizes: [
+      { sku: 'ZH-NN-100', label: '100 g', price: 279, mrp: 329 },
+      { sku: 'ZH-NN-250', label: '250 g', price: 599, mrp: 729 },
+    ],
+  },
+  {
+    slug: 'aavaram-poo',
+    name: 'Aavaram Poo',
+    script: 'Herbal Tea',
+    botanical: 'Senna auriculata',
+    tagline: 'Golden bloom wellness',
+    cup: 'Marigold',
+    accent: '#E0B01F',
+    accentDeep: '#8C6D0C',
+    image: '/products/aavaram-poo.jpg',
+    tile: '/products/aavaram-poo-tile.jpg',
+    price: 299,
+    mrp: 349,
+    brew: { temp: 95, minutes: 6 },
+    tamil: 'ஆவாரம் பூ',
+    short:
+      "Tanner's cassia flowers. Mild, golden, and cherished in Siddha medicine for generations.",
+    long:
+      'Senna auriculata grows as scrub across the drier districts of Tamil Nadu and flowers bright yellow most of the year. Siddha practitioners have used aavaram poo for a very long time, particularly around blood sugar and skin. We dry the flowers whole and sort them by hand.',
+    benefits: [
+      ['Supports blood sugar balance', 'Traditionally used to help maintain healthy levels.'],
+      ['Natural detoxifier', 'Helps purify the blood and supports liver health.'],
+      ['Improves digestion', 'Aids digestion and relieves constipation.'],
+      ['Healthy skin support', 'Antioxidants for clear, glowing skin.'],
+      ['Boosts immunity', 'Supports the body against infection.'],
+    ],
+    sizes: [
+      { sku: 'ZH-AP-100', label: '100 g', price: 299, mrp: 349 },
+      { sku: 'ZH-AP-250', label: '250 g', price: 649, mrp: 799 },
+    ],
+  },
+]
+
+export const SETS = [
+  {
+    slug: 'the-six-discovery-box',
+    name: 'The Six Discovery Box',
+    script: 'Discovery Box',
+    tagline: 'Six nature, one wellness',
+    accent: '#8F7222',
+    accentDeep: '#6E570F',
+    image: '/brand/range-poster-light.jpg',
+    tile: '/products/set-six-tile.jpg',
+    price: 1499,
+    mrp: 1899,
+    isSet: true,
+    short: 'All six infusions, 50 g of each. About sixty cups.',
+    long:
+      'Nobody should have to guess which herbal tea suits them from a product page. Fifty grams of each is roughly ten cups apiece — enough to drink each one properly, at different times of day, and work out which two you actually want to keep buying.',
+    contents: ['Butterfly pea', 'Hibiscus', 'Chamomile', 'Lavender', 'Nannari', 'Aavaram poo'],
+    sizes: [{ sku: 'ZH-SET-SIX', label: '6 × 50 g', price: 1499, mrp: 1899 }],
+  },
+  {
+    slug: 'the-calm-trio',
+    name: 'The Calm Trio',
+    script: 'Evening Set',
+    tagline: 'For the last hour of the day',
+    accent: '#6B4E9B',
+    accentDeep: '#574080',
+    image: '/brand/range-poster-dark.jpg',
+    tile: '/products/set-calm-tile.jpg',
+    price: 1099,
+    mrp: 1297,
+    isSet: true,
+    short: 'Chamomile, lavender and butterfly pea — the three that wind the day down.',
+    long:
+      'Three teas chosen for one job. Chamomile for the hour before bed, lavender when the day has been loud, butterfly pea for the evening you still want to feel clear-headed.',
+    contents: ['Chamomile 100 g', 'Lavender 100 g', 'Butterfly pea 100 g'],
+    sizes: [{ sku: 'ZH-SET-CALM', label: '3 × 100 g', price: 1099, mrp: 1297 }],
+  },
+]
+
+export const PRODUCTS = [...TEAS, ...SETS]
+
+export const FAQS = [
+  {
+    q: 'Are ZION herbal teas caffeine free?',
+    a: 'All six, completely. There is no Camellia sinensis in any tin — nothing that black, green or oolong tea is made from — so there is no caffeine at any stage. You can drink them at eleven at night.',
+  },
+  {
+    q: 'Why does butterfly pea tea turn purple?',
+    a: 'Anthocyanins, the same pigments that colour blueberries, shift with acidity. Add lime and the cup goes from indigo to violet in about five seconds. It is chemistry, not a dye.',
+  },
+  {
+    q: 'What is aavaram poo used for?',
+    a: 'Aavaram poo is the flower of Senna auriculata. In Siddha medicine it has been used for generations to support blood sugar balance, digestion and skin health. Brewed, it is mild, clear gold and slightly sweet.',
+  },
+  {
+    q: 'What is nannari?',
+    a: 'Nannari is the root of Hemidesmus indicus, Indian sarsaparilla — a traditional Tamil body coolant, most familiar as the sherbet drunk in summer. As a tea it is woody and faintly vanilla-sweet.',
+  },
+  {
+    q: 'How many cups do I get in a 100 g pack?',
+    a: 'Roughly 40 to 50. Flowers are light, so chamomile and butterfly pea go furthest; nannari root is dense and gives fewer, stronger cups. A heaped teaspoon per 200 ml is the standard measure.',
+  },
+  {
+    q: 'Do you ship across India?',
+    a: 'Yes, to every serviceable pincode, from our unit in Tamil Nadu. Delivery is free over ₹999 and ₹69 below that. Chennai, Coimbatore, Madurai, Tiruchirappalli and Salem usually take two to three working days.',
+  },
+  {
+    q: 'Are these safe during pregnancy or with medication?',
+    a: 'Herbal infusions are food, not medicine, and we make no medical claims. Some botanicals — hibiscus and senna-family herbs in particular — are not usually recommended in pregnancy, and some interact with medication. Ask your doctor first.',
+  },
+  {
+    q: 'Can I order on WhatsApp instead?',
+    a: 'Yes. Message +91 63840 13131 with what you want and a delivery pincode. Checkout is faster, but plenty of our customers prefer WhatsApp and that is entirely fine.',
+  },
+]
+
+export const bySlug = (slug) => PRODUCTS.find((p) => p.slug === slug)

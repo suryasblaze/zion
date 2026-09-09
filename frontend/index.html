@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <title>ZION Herbs — Caffeine-Free Herbal Teas from Tamil Nadu</title>
+    <meta
+      name="description"
+      content="Six single-origin herbal infusions — butterfly pea, hibiscus, chamomile, lavender, nannari and aavaram poo. Caffeine-free, no artificial flavours, hand-packed in Tamil Nadu."
+    />
+    <link rel="canonical" href="https://zionherbs.in/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ZION Herbs" />
+    <meta property="og:title" content="ZION Herbs — Caffeine-Free Herbal Teas from Tamil Nadu" />
+    <meta property="og:description" content="Six single-origin herbal infusions. Whole flowers and roots, nothing added." />
+    <meta property="og:image" content="/brand/range-poster-light.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Organisation + local business. Emitted statically so it is present
+         in the raw HTML for crawlers that do not run JavaScript. Page-level
+         Product and FAQPage schema is injected per route by <Seo />. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://zionherbs.in/#org",
+            "name": "ZION Herbs",
+            "url": "https://zionherbs.in",
+            "logo": "https://zionherbs.in/brand/logo-dark.png",
+            "slogan": "Six Nature. One Wellness.",
+            "description": "Caffeine-free single-origin herbal infusions, hand-packed in Tamil Nadu, India.",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+91-63840-13131",
+              "contactType": "customer service",
+              "areaServed": "IN",
+              "availableLanguage": ["en", "ta"]
+            }
+          },
+          {
+            "@type": "LocalBusiness",
+            "@id": "https://zionherbs.in/#business",
+            "name": "ZION Herbs",
+            "image": "https://zionherbs.in/brand/range-poster-light.jpg",
+            "telephone": "+91-63840-13131",
+            "priceRange": "₹₹",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Chennai",
+              "addressRegion": "Tamil Nadu",
+              "addressCountry": "IN"
+            },
+            "areaServed": [
+              { "@type": "State", "name": "Tamil Nadu" },
+              { "@type": "Country", "name": "India" }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

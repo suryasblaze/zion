@@ -1,0 +1,103 @@
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
+
+import Header from './components/Header'
+import Footer from './components/Footer'
+import CartDrawer from './components/CartDrawer'
+import ChatDock from './components/ChatDock'
+
+import Home from './pages/Home'
+import Shop from './pages/Shop'
+import Product from './pages/Product'
+import Refer from './pages/Refer'
+import Faq from './pages/Faq'
+import Brewing from './pages/Brewing'
+import OurRoots from './pages/OurRoots'
+import ReferralCatch from './pages/ReferralCatch'
+import Auth from './pages/Auth'
+import Account from './pages/Account'
+import Checkout from './pages/Checkout'
+import NotFound from './pages/NotFound'
+
+import AdminShell from './admin/AdminShell'
+import Dashboard from './admin/Dashboard'
+import AdminOrders from './admin/Orders'
+import AdminProducts from './admin/Products'
+import AdminCustomers from './admin/Customers'
+import AdminReferrals from './admin/Referrals'
+import AdminContent, { Coupons } from './admin/Content'
+import AdminSettings from './admin/Settings'
+import DesignStudio from './admin/DesignStudio'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname])
+  return null
+}
+
+/** The storefront chrome. The admin panel has its own, so it opts out. */
+function Storefront({ children }) {
+  return (
+    <>
+      <Header />
+      <CartDrawer />
+      <main id="main">{children}</main>
+      <Footer />
+      <ChatDock />
+    </>
+  )
+}
+
+export default function App() {
+  return (
+    <>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80]
+                   focus:rounded focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
+      >
+        Skip to content
+      </a>
+
+      <ScrollToTop />
+
+      <Routes>
+        {/* ------------------------------------------------ storefront */}
+        <Route path="/" element={<Storefront><Home /></Storefront>} />
+        <Route path="/shop" element={<Storefront><Shop /></Storefront>} />
+        <Route path="/the-six" element={<Storefront><Shop /></Storefront>} />
+        <Route path="/product/:slug" element={<Storefront><Product /></Storefront>} />
+        <Route path="/our-roots" element={<Storefront><OurRoots /></Storefront>} />
+        <Route path="/brewing" element={<Storefront><Brewing /></Storefront>} />
+        <Route path="/refer" element={<Storefront><Refer /></Storefront>} />
+        <Route path="/faq" element={<Storefront><Faq /></Storefront>} />
+        <Route path="/checkout" element={<Storefront><Checkout /></Storefront>} />
+
+        {/* accounts */}
+        <Route path="/signin" element={<Storefront><Auth mode="signin" /></Storefront>} />
+        <Route path="/signup" element={<Storefront><Auth mode="signup" /></Storefront>} />
+        <Route path="/account" element={<Storefront><Account /></Storefront>} />
+
+        {/* referral links land here, get attributed, then invite a signup */}
+        <Route path="/r/:code" element={<Storefront><ReferralCatch /></Storefront>} />
+
+        {/* ----------------------------------------------------- admin */}
+        <Route path="/admin" element={<AdminShell />}>
+          <Route index element={<Dashboard />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="customers" element={<AdminCustomers />} />
+          <Route path="referrals" element={<AdminReferrals />} />
+          <Route path="coupons" element={<Coupons />} />
+          <Route path="content" element={<AdminContent />} />
+          <Route path="design" element={<DesignStudio />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+
+        <Route path="*" element={<Storefront><NotFound /></Storefront>} />
+      </Routes>
+    </>
+  )
+}

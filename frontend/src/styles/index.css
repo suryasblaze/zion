@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Jost:wght@300;400;500&family=Italianno&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================================
+   Design tokens.
+
+   Ground is a warm near-white; the raised surface carries a faint green
+   bias, borrowed from dried tea leaf, so the two whites read as chosen
+   rather than as "white" and "slightly grey white".
+
+   Gold comes in two weights on purpose. --c-gold is dark enough to pass
+   contrast as text on paper; --c-gold-lit is a fill and a rule colour
+   only, never type.
+
+   The six botanical accents likewise ship in two weights: the saturated
+   one for swatches and fills, a darkened one for text, because chamomile
+   amber and aavaram marigold are unreadable as body copy on white.
+
+   The Design Studio overwrites any of these at runtime by setting the
+   custom property on :root. Nothing in the app hardcodes a hex.
+   ===================================================================== */
+:root {
+  --c-paper: 252 251 249;      /* #FCFBF9 */
+  --c-surface: 238 239 233;    /* #EEEFE9 -- faint sage */
+  --c-ink: 23 19 16;           /* #171310 */
+  --c-soft: 95 86 75;          /* #5F564B */
+  --c-line: 227 223 213;       /* #E3DFD5 */
+  --c-gold: 143 114 34;        /* #8F7222 -- readable as text */
+  --c-gold-lit: 200 164 77;    /* #C8A44D -- fills and rules only */
+
+  --c-accent: 43 63 140;       /* set per product */
+  --c-accent-deep: 35 51 111;
+
+  --f-display: 'Marcellus';
+  --f-body: 'Jost';
+  --f-script: 'Italianno';
+
+  --r-base: 2px;
+  --r-lg: 4px;
+  --w-shell: 1240px;
+
+  --motion: 1;                 /* Design Studio can zero this out */
+
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion: 0; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-paper text-ink font-body antialiased;
+    font-weight: 300;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display font-normal;
+    text-wrap: balance;
+  }
+
+  ::selection { background: rgb(var(--c-gold-lit) / 0.32); }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--c-gold));
+    outline-offset: 3px;
+  }
+
+  /* Digits that sit in columns -- prices, counts, brewing times. */
+  .nums { font-variant-numeric: tabular-nums; }
+}
+
+@layer components {
+  .shell { @apply mx-auto w-full max-w-shell px-6 sm:px-8; }
+
+  /* A rule that carries the active botanical colour. Used to mark a
+     section as belonging to one tea. */
+  .accent-rule { @apply border-l-2 border-accent pl-4; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded
+           px-7 py-3.5 text-[0.92rem] tracking-[0.05em] transition-all duration-300;
+    font-weight: 400;
+  }
+  .btn-solid {
+    @apply bg-ink text-paper hover:bg-accent-deep;
+  }
+  .btn-gold {
+    @apply bg-gold text-paper hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply border border-line text-ink hover:border-gold hover:text-gold;
+  }
+
+  .field {
+    @apply w-full rounded border border-line bg-paper px-4 py-3 text-ink
+           placeholder:text-soft/60 focus:border-gold focus:outline-none
+           focus:ring-1 focus:ring-gold/40 transition;
+  }
+
+  .label {
+    @apply block text-micro uppercase tracking-[0.14em] text-soft mb-2;
+  }
+
+  /* Section eyebrow set in the packaging script, not tracked-out caps. */
+  .script { @apply font-script text-gold; font-size: 2.1rem; line-height: 1; }
+
+  .hairline { @apply border-t border-line; }
+}
+
+/* Chat dock motion. The halo pulses only until the guide is opened once;
+   the typing dots stand in for a person composing a reply. */
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+  40%           { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes halo {
+  0%        { transform: scale(1);    opacity: 0.85; }
+  70%, 100% { transform: scale(1.45); opacity: 0; }
+}

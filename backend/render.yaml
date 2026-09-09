@@ -1,0 +1,51 @@
+# Render blueprint for the ZION API.
+#
+# Render runs a real long-lived process, which is what this app needs: it
+# keeps a psycopg connection pool and does multi-statement transactions
+# with SELECT ... FOR UPDATE. That is the opposite of what a serverless
+# platform gives you, which is why the API does not go on Vercel.
+#
+# Deploy: push to GitHub, then New > Blueprint and point at this file.
+services:
+  - type: web
+    name: zion-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # 2 workers, 4 threads each. Keep workers low: every worker opens its
+    # own pool, and Supabase's session pooler has a finite connection budget.
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.12"
+
+      # Everything below is secret. Set these in the Render dashboard, not here.
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PRIVACY_PEPPER
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: zion-media
+
+      # Must include your Vercel URL, or the browser blocks every API call.
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PUBLIC_SITE_URL
+        sync: false
+
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false

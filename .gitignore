@@ -1,0 +1,21 @@
+# dependencies and build output
+node_modules/
+dist/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# secrets -- never commit these
+.env
+.env.local
+backend/.env
+frontend/.env
+
+# local QA artefacts. Anchored to the repo root on purpose: an unanchored
+# *.png would also swallow the brand artwork in tea/ and the optimised
+# images in frontend/public, which are source, not clutter.
+/*.png
+/screenshots/
+.playwright-mcp/
+*.log
