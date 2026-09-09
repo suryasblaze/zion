@@ -19,3 +19,4 @@ frontend/.env
 /screenshots/
 .playwright-mcp/
 *.log
+/tiles-check.jpg
