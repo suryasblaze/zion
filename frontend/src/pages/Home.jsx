@@ -10,7 +10,6 @@ const SLIDE_MS = 5000
 
 export default function Home() {
   const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(false)
   const [openSlug, setOpenSlug] = useState(null)
   const { add } = useCart()
   const { get } = useSettings()
@@ -22,15 +21,26 @@ export default function Home() {
   const rows = []
   for (let i = 0; i < all.length; i += 4) rows.push(all.slice(i, i + 4))
 
-  // The hero cycles through the six on its own. The only control is the
-  // pause button: someone who wants to read a poster can hold it there,
-  // and nothing else on the page interrupts the rotation.
+  const go = (step) => setActive((i) => (i + step + TEAS.length) % TEAS.length)
+
+  // The hero swaps src every few seconds. Without this the first pass
+  // through the six shows a blank frame while each poster downloads,
+  // because only the first one is in cache.
   useEffect(() => {
-    if (paused) return
+    TEAS.forEach((t) => {
+      const img = new Image()
+      img.src = t.image
+    })
+  }, [])
+
+  // Keyed on `active`, so the clock restarts whenever the slide changes.
+  // Pressing an arrow therefore buys a full interval on the new slide,
+  // instead of being cut short by a timer that was already running.
+  useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    const id = setInterval(() => setActive((i) => (i + 1) % TEAS.length), SLIDE_MS)
-    return () => clearInterval(id)
-  }, [paused])
+    const id = setTimeout(() => go(1), SLIDE_MS)
+    return () => clearTimeout(id)
+  }, [active])
 
   return (
     <>
@@ -108,34 +118,42 @@ export default function Home() {
                 loading="eager"
               />
 
-            {/* Sits on the poster rather than floating free, so it reads as
-                a control for this image and not another chat bubble. */}
-            <button
-              onClick={() => setPaused((v) => !v)}
-              aria-pressed={paused}
-              aria-label={paused ? 'Resume the slideshow' : 'Pause the slideshow'}
-              title={paused ? 'Resume' : 'Pause'}
-              className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full
-                         border border-line bg-paper/90 text-ink backdrop-blur
-                         transition-colors hover:border-gold hover:text-gold"
-            >
-              {paused ? (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M8 5v14l11-7z" />
+              {/* Deliberately faint. The hero moves on its own; these are
+                  only for someone who wants to go back or skip ahead, and
+                  pressing one does not stop the rotation. */}
+              <button
+                onClick={() => go(-1)}
+                aria-label="Previous tea"
+                className="absolute left-0 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2
+                           place-items-center rounded-full text-ink opacity-35
+                           transition-all duration-300 hover:bg-paper/70 hover:opacity-100
+                           hover:backdrop-blur-sm focus-visible:opacity-100"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M15 5l-7 7 7 7" />
                 </svg>
-              ) : (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <rect x="6" y="5" width="4" height="14" rx="1" />
-                  <rect x="14" y="5" width="4" height="14" rx="1" />
+              </button>
+
+              <button
+                onClick={() => go(1)}
+                aria-label="Next tea"
+                className="absolute right-0 top-1/2 grid h-11 w-11 translate-x-1/2 -translate-y-1/2
+                           place-items-center rounded-full text-ink opacity-35
+                           transition-all duration-300 hover:bg-paper/70 hover:opacity-100
+                           hover:backdrop-blur-sm focus-visible:opacity-100"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 5l7 7-7 7" />
                 </svg>
-              )}
-            </button>
+              </button>
             </div>
 
             <figcaption className="mt-3 flex items-center justify-center gap-2 text-tiny italic text-soft">
               {tea.botanical}
               <span className="not-italic text-micro">
-                {paused ? '· paused' : `· ${active + 1} of ${TEAS.length}`}
+                · {active + 1} of {TEAS.length}
               </span>
             </figcaption>
           </figure>
