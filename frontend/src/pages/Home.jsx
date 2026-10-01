@@ -1,17 +1,36 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Seo, { faqSchema } from '../components/Seo'
+import ProductDetailPanel from '../components/ProductDetailPanel'
 import { TEAS, SETS, FAQS } from '../data/catalog'
 import { useCart, useSettings } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
 
+const SLIDE_MS = 5000
+
 export default function Home() {
   const [active, setActive] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [openSlug, setOpenSlug] = useState(null)
   const { add } = useCart()
   const { get } = useSettings()
   const tea = TEAS[active]
 
   const coinName = get('wallet.coin_name', 'ZION Coins')
+
+  const all = [...TEAS, ...SETS]
+  const rows = []
+  for (let i = 0; i < all.length; i += 4) rows.push(all.slice(i, i + 4))
+
+  // The hero cycles through the six on its own. The only control is the
+  // pause button: someone who wants to read a poster can hold it there,
+  // and nothing else on the page interrupts the rotation.
+  useEffect(() => {
+    if (paused) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const id = setInterval(() => setActive((i) => (i + 1) % TEAS.length), SLIDE_MS)
+    return () => clearInterval(id)
+  }, [paused])
 
   return (
     <>
@@ -78,7 +97,7 @@ export default function Home() {
               className="absolute -inset-3 -z-10 transition-colors duration-700"
               style={{ background: 'rgb(var(--c-accent) / 0.07)' }}
             />
-            <div className="border border-line bg-paper p-3">
+            <div className="relative border border-line bg-paper p-3">
               <img
                 key={tea.slug}
                 src={tea.image}
@@ -88,50 +107,40 @@ export default function Home() {
                 className="w-full animate-rise"
                 loading="eager"
               />
+
+            {/* Sits on the poster rather than floating free, so it reads as
+                a control for this image and not another chat bubble. */}
+            <button
+              onClick={() => setPaused((v) => !v)}
+              aria-pressed={paused}
+              aria-label={paused ? 'Resume the slideshow' : 'Pause the slideshow'}
+              title={paused ? 'Resume' : 'Pause'}
+              className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full
+                         border border-line bg-paper/90 text-ink backdrop-blur
+                         transition-colors hover:border-gold hover:text-gold"
+            >
+              {paused ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <rect x="6" y="5" width="4" height="14" rx="1" />
+                  <rect x="14" y="5" width="4" height="14" rx="1" />
+                </svg>
+              )}
+            </button>
             </div>
-            <figcaption className="mt-3 text-center text-tiny italic text-soft">
+
+            <figcaption className="mt-3 flex items-center justify-center gap-2 text-tiny italic text-soft">
               {tea.botanical}
+              <span className="not-italic text-micro">
+                {paused ? '· paused' : `· ${active + 1} of ${TEAS.length}`}
+              </span>
             </figcaption>
           </figure>
         </div>
 
-        {/* the six as a colour spectrum — the selector for everything above */}
-        <div className="shell">
-          <div
-            className="grid border-t border-line sm:grid-cols-3 lg:grid-cols-6"
-            role="tablist"
-            aria-label="Choose an infusion"
-          >
-            {TEAS.map((t, i) => (
-              <button
-                key={t.slug}
-                role="tab"
-                aria-selected={i === active}
-                onClick={() => setActive(i)}
-                className={`group border-b border-line px-4 py-5 text-left transition-colors duration-300
-                            lg:border-b-0 lg:border-r lg:last:border-r-0
-                            ${i === active ? 'bg-surface' : 'hover:bg-surface/60'}`}
-              >
-                <span
-                  className="block rounded-full transition-all duration-300"
-                  style={{
-                    background: t.accent,
-                    height: i === active ? 6 : 3,
-                    opacity: i === active ? 1 : 0.45,
-                  }}
-                />
-                <span
-                  className={`mt-3 block text-[0.92rem] transition-colors ${
-                    i === active ? 'text-ink' : 'text-soft group-hover:text-ink'
-                  }`}
-                >
-                  {t.name}
-                </span>
-                <span className="mt-0.5 block text-micro uppercase text-soft">{t.cup}</span>
-              </button>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* ================================================= the shelf */}
@@ -145,11 +154,38 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid border-l border-t border-line sm:grid-cols-2 lg:grid-cols-4">
-            {[...TEAS, ...SETS].map((p) => (
-              <ProductCard key={p.slug} product={p} onAdd={() => add(p, p.sizes[0])} />
-            ))}
-          </div>
+          {/* Each row of cards is followed by the open panel, so the detail
+              appears directly beneath the product you clicked rather than
+              pushing the grid apart mid-row. */}
+          {rows.map((row, rowIndex) => {
+            const openInRow = row.find((p) => p.slug === openSlug)
+            return (
+              <div key={rowIndex}>
+                <div
+                  className={`grid border-l border-line sm:grid-cols-2 lg:grid-cols-4
+                              ${rowIndex === 0 ? 'border-t' : ''}`}
+                >
+                  {row.map((p) => (
+                    <ProductCard
+                      key={p.slug}
+                      product={p}
+                      open={p.slug === openSlug}
+                      onToggle={() => setOpenSlug(openSlug === p.slug ? null : p.slug)}
+                      onAdd={() => add(p, p.sizes[0])}
+                    />
+                  ))}
+                </div>
+
+                {openInRow && (
+                  <ProductDetailPanel
+                    product={openInRow}
+                    onAdd={() => add(openInRow, openInRow.sizes[0])}
+                    onClose={() => setOpenSlug(null)}
+                  />
+                )}
+              </div>
+            )
+          })}
         </div>
       </section>
 
@@ -290,11 +326,13 @@ export default function Home() {
   )
 }
 
-function ProductCard({ product, onAdd }) {
+function ProductCard({ product, onAdd, open, onToggle }) {
   return (
     <article
       style={accentStyle(product)}
-      className="group relative flex flex-col gap-3 border-b border-r border-line bg-paper p-6 transition-colors duration-300 hover:bg-surface"
+      className={`group relative flex flex-col gap-3 border-b border-r border-line p-6
+                  transition-colors duration-300
+                  ${open ? 'bg-surface' : 'bg-paper hover:bg-surface'}`}
     >
       <span className="absolute left-0 top-6 bottom-6 w-[2px] bg-accent" />
 
@@ -320,19 +358,37 @@ function ProductCard({ product, onAdd }) {
           : `${product.brew.temp}°C · ${product.brew.minutes} min · caffeine free`}
       </p>
 
-      <div className="mt-auto flex items-end justify-between gap-3 pt-2">
+      <div className="mt-auto pt-2">
         <p className="nums flex items-baseline gap-2">
           <span className="font-display text-[1.35rem]">{inr(product.price)}</span>
           {product.mrp > product.price && (
             <s className="text-tiny text-soft">{inr(product.mrp)}</s>
           )}
         </p>
-        <button
-          onClick={onAdd}
-          className="text-tiny text-accent-deep underline underline-offset-4 transition-opacity hover:opacity-70"
-        >
-          Add to bag
-        </button>
+
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <button
+            onClick={onToggle}
+            aria-expanded={open}
+            className="flex items-center gap-1.5 text-tiny text-ink transition-colors hover:text-gold"
+          >
+            {open ? 'Hide details' : 'See details'}
+            <svg
+              width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" aria-hidden="true"
+              className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+            >
+              <path d="M5 9l7 7 7-7" />
+            </svg>
+          </button>
+
+          <button
+            onClick={onAdd}
+            className="text-tiny text-accent-deep underline underline-offset-4 transition-opacity hover:opacity-70"
+          >
+            Add to bag
+          </button>
+        </div>
       </div>
     </article>
   )

@@ -10,6 +10,10 @@
 export const TEAS = [
   {
     slug: 'butterfly-pea',
+    taste: "Soft and faintly earthy, closer to a good green tea than to anything floral. Barely any aroma until the water hits it, then a clean grassy sweetness. Lemon sharpens it; honey rounds it out.",
+    origin: "Grown in Tamil Nadu and gathered as whole blooms, not broken petals. Shade-dried so the pigment survives, then hand-sorted.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine, no sugar", "Anthocyanins — the pigments that make it blue", "No additives, colour or preservative"],
+    love: ["It turns violet when you add lime, in front of you", "Caffeine free, so an evening cup costs you nothing", "Whole flowers, so it still smells of something", "The most striking thing you can hand a guest"],
     name: 'Butterfly Pea',
     script: 'Pea Tea',
     botanical: 'Clitoria ternatea',
@@ -40,6 +44,10 @@ export const TEAS = [
   },
   {
     slug: 'hibiscus',
+    taste: "Sharp and bright, like cranberry with the sugar taken out. Smells faintly of red berries and tamarind. The most assertive tea in the range, and the one that takes honey best.",
+    origin: "Grown across Tamil Nadu and dried within hours of picking, which is why the colour comes out garnet rather than brown. Only the calyx is used, never the leaf.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine, no sugar", "Naturally high in Vitamin C", "Anthocyanins and organic acids from the calyx"],
+    love: ["Brews a colour that does not look real", "The best of the six over ice", "Tart enough to drink without sugar", "Dried same-day, so it tastes clean rather than dusty"],
     name: 'Hibiscus',
     script: 'Herbal Tea',
     botanical: 'Hibiscus sabdariffa',
@@ -70,6 +78,10 @@ export const TEAS = [
   },
   {
     slug: 'chamomile',
+    taste: "Honeyed and apple-sweet, with a warm hay aroma that arrives the moment you pour. Rounded and gentle. No bitterness at all if you keep to five minutes.",
+    origin: "Whole flower heads, never milled. Chamomile's aromatic oils sit in the yellow disc at the centre of the flower and escape within days of grinding.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine, no sugar", "Apigenin — the compound chamomile is known for", "Whole flower heads, not dust"],
+    love: ["You can see the individual flowers in the tin", "The easiest of the six to get right", "The cup for the last hour of the evening", "Gentle enough for every day"],
     name: 'Chamomile',
     script: 'Herbal Tea',
     botanical: 'Matricaria chamomilla',
@@ -100,6 +112,10 @@ export const TEAS = [
   },
   {
     slug: 'lavender',
+    taste: "Floral and clean, slightly sweet, with a cool minty finish. Smells like a summer field rather than soap, which is entirely a matter of how briefly you brew it.",
+    origin: "The one botanical we do not source from Tamil Nadu. Culinary-grade Lavandula angustifolia needs altitude and a dry summer, so ours comes from the hills.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine, no sugar", "Linalool and linalyl acetate — the calming aromatics", "Culinary grade, not cosmetic"],
+    love: ["Culinary grade, so it never tastes like perfume", "Three minutes and it is perfect; four and it is not", "Pairs with honey and lemon better than anything here", "The one to reach for after a loud day"],
     name: 'Lavender',
     script: 'Herbal Infusion',
     botanical: 'Lavandula angustifolia',
@@ -130,6 +146,10 @@ export const TEAS = [
   },
   {
     slug: 'nannari',
+    taste: "Woody and faintly vanilla-sweet, with a long cooling finish. The aroma is unmistakable if you grew up here: sarsaparilla, root beer, summer afternoons.",
+    origin: "Hemidesmus indicus root, gathered in Tamil Nadu and cut coarse rather than powdered. Finely milled nannari loses its aroma and gives a muddy cup.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine, no sugar", "Coumarins — which give the sarsaparilla aroma", "Coarse-cut root, not powder"],
+    love: ["The nannari sherbet you remember, in a tin", "A genuine body coolant, not a marketing line", "Rooted in Siddha practice, not invented for a label", "Brews strong enough to sweeten with jaggery and ice"],
     name: 'Nannari',
     script: 'Herbal Tea',
     botanical: 'Hemidesmus indicus',
@@ -161,6 +181,10 @@ export const TEAS = [
   },
   {
     slug: 'aavaram-poo',
+    taste: "Mild and lightly sweet, a little grassy, with no bitterness whatsoever. Faint honey aroma. The easiest tea here to drink several cups of in a day.",
+    origin: "Senna auriculata grows as scrub across the drier districts of Tamil Nadu and flowers bright yellow most of the year. Dried whole and hand-sorted, never shredded.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine, no sugar", "Flavonoids and polyphenols from the whole flower", "Hand-sorted, single botanical"],
+    love: ["Cherished in Siddha medicine for generations", "Clear gold in the cup, never cloudy", "Mild enough for several cups a day", "Rarely sold outside Tamil Nadu at this standard"],
     name: 'Aavaram Poo',
     script: 'Herbal Tea',
     botanical: 'Senna auriculata',
@@ -195,6 +219,10 @@ export const TEAS = [
 export const SETS = [
   {
     slug: 'the-six-discovery-box',
+    taste: "Six different cups, from the sharp tartness of hibiscus to the woody sweetness of nannari. The point is the contrast: you will know which two are yours by the end of the week.",
+    origin: "All six botanicals, each from its own source, packed together in our unit in Tamil Nadu. The brewing card is printed with the tested temperature and time for each.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine in any of the six", "50 g of each of the six", "Around ten cups per tea, sixty in total"],
+    love: ["The honest way to find your one, rather than guessing", "Around sixty cups for less than buying two tins", "Brewing card included, so nothing is wasted", "Ships gift-ready, with no pricing inside"],
     name: 'The Six Discovery Box',
     script: 'Discovery Box',
     tagline: 'Six nature, one wellness',
@@ -213,6 +241,10 @@ export const SETS = [
   },
   {
     slug: 'the-calm-trio',
+    taste: "Three quiet cups. Chamomile honeyed and soft, lavender floral and cool, butterfly pea clean and faintly grassy. Nothing here is sharp.",
+    origin: "Chamomile and butterfly pea from Tamil Nadu, lavender from the hills. Packed together in the presentation sleeve.",
+    nutrition: ["0 kcal per 200 ml cup", "No caffeine in any of the three", "100 g each of three teas"],
+    love: ["Chosen for one job: the last hour of the day", "Nothing in the box will keep you awake", "100 g of each, so it lasts", "The set people buy after their first chamomile"],
     name: 'The Calm Trio',
     script: 'Evening Set',
     tagline: 'For the last hour of the day',
