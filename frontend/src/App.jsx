@@ -75,8 +75,11 @@ export default function App() {
         <Route path="/brewing" element={<Storefront><Brewing /></Storefront>} />
         <Route path="/refer" element={<Storefront><Refer /></Storefront>} />
         <Route path="/faq" element={<Storefront><Faq /></Storefront>} />
-        {/* The event link. Short on purpose: it gets typed off a poster. */}
-        <Route path="/try" element={<Storefront><EventSignup /></Storefront>} />
+        {/* The event link. Short on purpose: it gets typed off a poster.
+            Deliberately outside <Storefront>: no nav, no bag, no footer,
+            no chat dock. Someone standing at a stall has one job, and
+            every other link on the page is a way to not finish it. */}
+        <Route path="/try" element={<EventSignup />} />
         <Route path="/checkout" element={<Storefront><Checkout /></Storefront>} />
 
         {/* accounts */}

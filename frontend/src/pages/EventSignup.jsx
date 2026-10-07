@@ -138,9 +138,11 @@ export default function EventSignup() {
 
   if (!cfg) {
     return (
-      <section className="shell grid min-h-[60vh] place-items-center py-20">
-        <p className="text-soft">Loading…</p>
-      </section>
+      <EventShell>
+        <section className="grid min-h-[40vh] place-items-center">
+          <p className="text-soft">Loading…</p>
+        </section>
+      </EventShell>
     )
   }
 
@@ -150,9 +152,10 @@ export default function EventSignup() {
     return (
       <>
         <Seo title={`You are on the list — ${cfg.name}`} noindex />
+        <EventShell>
         <section
           style={chosen ? { '--c-accent': hexToRgb(chosen.accent_color) } : undefined}
-          className="shell grid min-h-[72vh] place-items-center py-14"
+          className="shell grid place-items-center py-6"
         >
           <div className="w-full max-w-[30rem] text-center">
             <p className="script mb-1">Thank you</p>
@@ -208,6 +211,7 @@ export default function EventSignup() {
             </button>
           </div>
         </section>
+        </EventShell>
       </>
     )
   }
@@ -217,15 +221,17 @@ export default function EventSignup() {
     return (
       <>
         <Seo title={`${cfg.name} — sampling closed`} noindex />
-        <section className="shell grid min-h-[60vh] place-items-center py-20 text-center">
-          <div className="max-w-[40ch]">
-            <p className="script mb-2">That is a wrap</p>
-            <h1 className="text-d3">{cfg.closed_message}</h1>
-            <Link to="/shop" className="btn btn-solid mt-7">
-              Browse the teas
-            </Link>
-          </div>
-        </section>
+        <EventShell>
+          <section className="shell grid min-h-[36vh] place-items-center py-10 text-center">
+            <div className="max-w-[40ch]">
+              <p className="script mb-2">That is a wrap</p>
+              <h1 className="text-d3">{cfg.closed_message}</h1>
+              <Link to="/shop" className="btn btn-solid mt-7">
+                Browse the teas
+              </Link>
+            </div>
+          </section>
+        </EventShell>
       </>
     )
   }
@@ -239,7 +245,8 @@ export default function EventSignup() {
         noindex
       />
 
-      <section className="shell max-w-[46rem] py-12 sm:py-16">
+      <EventShell>
+      <section className="shell max-w-[44rem] pb-6 pt-2">
         <header className="text-center">
           <p className="script mb-1">{cfg.name}</p>
           <h1 className="text-d2">{cfg.headline}</h1>
@@ -363,7 +370,41 @@ export default function EventSignup() {
           </p>
         </form>
       </section>
+      </EventShell>
     </>
+  )
+}
+
+/**
+ * The page stands alone -- no header, no footer, no bag. Just the mark,
+ * the form, and a way to reach a person. Anyone opening this is standing
+ * at a stall with a phone in one hand.
+ */
+function EventShell({ children }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-paper">
+      <header className="flex justify-center px-6 pb-2 pt-10 sm:pt-14">
+        <img
+          src="/brand/logo-dark.png"
+          alt="ZION Herbs"
+          width="720"
+          height="1037"
+          className="h-[86px] w-auto sm:h-[104px]"
+        />
+      </header>
+
+      <main className="flex-1">{children}</main>
+
+      <footer className="px-6 py-8 text-center">
+        <p className="script text-[1.6rem]">Sip nature, sip wellness</p>
+        <p className="mt-1 text-micro text-soft">
+          ZION Herbs · Tamil Nadu ·{' '}
+          <a href="https://wa.me/916384013131" className="underline underline-offset-2">
+            WhatsApp us
+          </a>
+        </p>
+      </footer>
+    </div>
   )
 }
 
