@@ -117,15 +117,17 @@ export default function EventSignups() {
         {/* ------------------------------------------- counter lookup */}
         <section className="mb-9 border border-line bg-paper p-6">
           <h2 className="font-display text-[1.15rem]">At the counter</h2>
-          <p className="mt-1 text-soft">Type the code on their screen.</p>
+          <p className="mt-1 text-soft">
+            Type the code on their screen — or their phone number, if they have lost it.
+          </p>
 
           <form onSubmit={lookup} className="mt-4 flex flex-wrap gap-2">
             <input
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="ZN-4K7Q"
-              className="field nums max-w-[220px] text-[1.1rem] tracking-[0.12em]"
-              aria-label="Claim code"
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="ZN-4K7Q or 9840012345"
+              className="field nums max-w-[260px] text-[1.1rem] tracking-[0.12em]"
+              aria-label="Claim code or phone number"
             />
             <button className="btn btn-solid px-6 py-2.5">Find</button>
           </form>

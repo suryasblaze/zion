@@ -124,29 +124,29 @@ def signup():
                     errors={"product_slug": "Choose another."})
 
     with db.transaction() as cur:
-        # Someone who submits twice gets their original code back rather
-        # than an error. At a stall, a second tap on a slow connection is
-        # far more likely than an attempt to game anything.
+        # A duplicate phone gets a flat refusal with nothing in it: no
+        # name, no code, no confirmation of whose number it is. This
+        # endpoint is unauthenticated, and Indian mobile numbers are ten
+        # digits with predictable prefixes, so echoing a stored record
+        # back on a phone match would be a lookup service -- enumerate
+        # numbers, harvest names and claim codes, collect the samples.
+        #
+        # The double-tap case it used to serve is handled on the client
+        # instead: the browser keeps its own code in local storage and
+        # redisplays it without asking us. Someone who genuinely lost it
+        # asks staff, who can look them up by phone in the admin panel.
+        # That is the right trust boundary -- a person at the counter can
+        # be looked at; an HTTP request cannot.
         if cfg["one_per_phone"]:
             cur.execute(
-                """select claim_code, product_name, status, full_name
-                     from event_signups
-                    where event_slug = %s and phone = %s""",
+                "select 1 from event_signups where event_slug = %s and phone = %s",
                 (cfg["slug"], phone),
             )
-            existing = cur.fetchone()
-            if existing:
-                return ok(
-                    {
-                        "claim_code": existing["claim_code"],
-                        "product_name": existing["product_name"],
-                        "full_name": existing["full_name"],
-                        "already_registered": True,
-                        "status": existing["status"],
-                        "thank_you": cfg["thank_you"],
-                        "event_name": cfg["name"],
-                    },
-                    message="You are already on the list — here is your code again.",
+            if cur.fetchone():
+                return fail(
+                    "That number is already registered for this event. If it was you, "
+                    "show the code you were given earlier, or ask us at the counter.",
+                    409, code="already_registered",
                 )
 
         code = _new_code(cur)
@@ -276,18 +276,30 @@ def unclaim(signup_id):
     return ok(to_jsonable(row), message="Put back to pending.")
 
 
-@bp.get("/admin/lookup/<code>")
+@bp.get("/admin/lookup/<term>")
 @admin_required
-def lookup(code):
-    """Find a sign-up by the code someone is holding up at the counter."""
+def lookup(term):
+    """
+    Find a sign-up from the counter, by claim code or by phone number.
+
+    Phone lookup is how staff help someone who has lost their code -- the
+    public endpoint deliberately will not do this, because there is no way
+    for it to tell who is asking. Behind an admin login there is.
+    """
+    term = (term or "").strip()
+    digits = _normalise_phone(term)
+
     row = db.query_one(
         """select s.id, s.full_name, s.phone, s.product_name, s.claim_code,
                   s.status, s.claimed_at, s.created_at, p.accent_color
              from event_signups s
              left join products p on p.id = s.product_id
-            where upper(s.claim_code) = upper(%s)""",
-        (code.strip(),),
+            where upper(s.claim_code) = upper(%s)
+               or (length(%s) >= 10 and s.phone = %s)
+            order by s.created_at desc
+            limit 1""",
+        (term, digits, digits),
     )
     if not row:
-        return fail(f"No sign-up matches {code.strip().upper()}.", 404)
+        return fail(f"No sign-up matches {term}.", 404)
     return ok(to_jsonable(row))

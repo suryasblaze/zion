@@ -14,6 +14,8 @@ import { accentStyle } from '../lib/format'
  * so the copy can change between events without a deploy.
  */
 
+const CODE_KEY = 'zion.event_code'
+
 const FALLBACK = {
   enabled: true,
   name: 'ZION tasting',
@@ -47,7 +49,21 @@ export default function EventSignup() {
   useEffect(() => {
     api
       .eventConfig(FALLBACK)
-      .then((c) => setCfg(c?.products?.length ? c : FALLBACK))
+      .then((c) => {
+        const conf = c?.products?.length ? c : FALLBACK
+        setCfg(conf)
+
+        // This browser keeps its own claim code. A refresh, a second tap,
+        // or coming back an hour later shows it again from here -- the
+        // server will not hand a code to anyone who merely knows a phone
+        // number, so the device has to be the one that remembers.
+        try {
+          const saved = JSON.parse(localStorage.getItem(CODE_KEY) || 'null')
+          if (saved && saved.event_slug === (conf.slug || 'default')) setDone(saved)
+        } catch {
+          /* a corrupt entry just means they fill the form again */
+        }
+      })
       .catch(() => setCfg(FALLBACK))
   }, [])
 
@@ -96,13 +112,21 @@ export default function EventSignup() {
         source: new URLSearchParams(window.location.search).get('src') || 'link',
       })
       setDone(res)
+      try {
+        localStorage.setItem(
+          CODE_KEY,
+          JSON.stringify({ ...res, event_slug: cfg?.slug || 'default' })
+        )
+      } catch {
+        /* private browsing: they still have the code on screen */
+      }
     } catch (err) {
       const fieldErrors = err.payload?.errors
       setErrors(fieldErrors || {})
       setProblem(
         fieldErrors
           ? err.message
-          : err.status === 403
+          : err.status === 403 || err.status === 409
           ? err.message
           : 'We could not reach the counter just now. Check your signal and try again — ' +
             'nothing has been sent twice.'
@@ -168,9 +192,20 @@ export default function EventSignup() {
               Take a screenshot — this code is not sent by SMS.
             </p>
 
-            <Link to="/shop" className="mt-7 inline-block border-b border-gold pb-0.5 text-gold">
+            <Link to="/shop" className="mt-7 block border-b border-gold pb-0.5 text-gold">
               Have a look at the range
             </Link>
+
+            <button
+              onClick={() => {
+                try { localStorage.removeItem(CODE_KEY) } catch { /* nothing to clear */ }
+                setDone(null)
+                setForm({ full_name: '', phone: '', email: '', product_slug: '' })
+              }}
+              className="mt-5 text-tiny text-soft underline underline-offset-4 hover:text-ink"
+            >
+              Someone else wants to sign up on this phone
+            </button>
           </div>
         </section>
       </>
