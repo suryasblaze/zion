@@ -20,3 +20,4 @@ frontend/.env
 .playwright-mcp/
 *.log
 /tiles-check.jpg
+/build-out/
