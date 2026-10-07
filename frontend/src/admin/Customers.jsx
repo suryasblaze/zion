@@ -8,6 +8,7 @@ export default function Customers() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [adjusting, setAdjusting] = useState(null)
+  const [creating, setCreating] = useState(false)
   const [toast, setToast] = useState(null)
 
   const load = useCallback(async () => {
@@ -39,7 +40,14 @@ export default function Customers() {
 
   return (
     <>
-      <PageHead title="Customers" sub="Accounts, what they have spent, and their coin balances." />
+      <PageHead
+        title="Customers"
+        sub="Accounts, what they have spent, and their coin balances. Visitors cannot register themselves, so accounts are made here."
+      >
+        <button onClick={() => setCreating(true)} className="btn btn-solid px-5 py-2.5 text-tiny">
+          Add account
+        </button>
+      </PageHead>
 
       <div className="p-6 lg:p-9">
         <input
@@ -100,6 +108,17 @@ export default function Customers() {
         )}
       </div>
 
+      {creating && (
+        <NewAccount
+          onClose={() => setCreating(false)}
+          onDone={(msg) => {
+            setToast({ text: msg })
+            setCreating(false)
+            load()
+          }}
+        />
+      )}
+
       {adjusting && (
         <AdjustCoins
           customer={adjusting}
@@ -115,6 +134,142 @@ export default function Customers() {
 
       {toast && <Toast tone={toast.tone} onDone={() => setToast(null)}>{toast.text}</Toast>}
     </>
+  )
+}
+
+/**
+ * Creating an account by hand.
+ *
+ * The role is an explicit choice with customer preselected. An account
+ * that can read every order and move wallet balances should be a decision
+ * someone made, not what happens when a field is left alone.
+ */
+function NewAccount({ onClose, onDone }) {
+  const [form, setForm] = useState({
+    full_name: '', email: '', phone: '', password: '', role: 'customer',
+  })
+  const [errors, setErrors] = useState({})
+  const [problem, setProblem] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  const set = (k) => (e) => {
+    setForm((f) => ({ ...f, [k]: e.target.value }))
+    setErrors((x) => ({ ...x, [k]: undefined }))
+    setProblem(null)
+  }
+
+  const suggest = () => {
+    // Readable rather than maximally random: this gets read down a phone
+    // to the person it belongs to, who should change it afterwards.
+    const words = ['tea', 'leaf', 'bloom', 'root', 'petal', 'brew']
+    const w = words[Math.floor(Math.random() * words.length)]
+    const n = Math.floor(1000 + Math.random() * 9000)
+    setForm((f) => ({ ...f, password: `Zion-${w}-${n}` }))
+  }
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setBusy(true)
+    setErrors({})
+    setProblem(null)
+    try {
+      const row = await adminApi.createCustomer(form)
+      onDone(`Account created for ${row.full_name}. They can sign in now.`)
+    } catch (err) {
+      setErrors(err.payload?.errors || {})
+      setProblem(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <div onClick={onClose} className="fixed inset-0 z-[55] bg-ink/30" aria-hidden="true" />
+      <aside
+        role="dialog"
+        aria-label="New account"
+        className="fixed right-0 top-0 z-[56] flex h-full w-full max-w-[520px] flex-col bg-paper shadow-[-18px_0_50px_rgba(23,19,16,0.14)]"
+      >
+        <header className="flex items-center justify-between border-b border-line px-6 py-4">
+          <h2 className="font-display text-[1.25rem]">New account</h2>
+          <button onClick={onClose} className="text-soft hover:text-ink" aria-label="Close">✕</button>
+        </header>
+
+        <form onSubmit={submit} className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            {problem && (
+              <p className="mb-5 border-l-2 border-[#B4472F] bg-[#B4472F]/[0.05] px-4 py-3 text-tiny text-[#8F3623]">
+                {problem}
+              </p>
+            )}
+
+            <div className="grid gap-5">
+              <F id="n_full_name" label="Name" value={form.full_name} onChange={set('full_name')} err={errors.full_name} required />
+              <F id="n_email" label="Email" type="email" value={form.email} onChange={set('email')} err={errors.email}
+                 hint="This is what they sign in with." required />
+              <F id="n_phone" label="Phone" value={form.phone} onChange={set('phone')} err={errors.phone} hint="Optional." />
+
+              <div>
+                <label className="label" htmlFor="n_password">Password</label>
+                <div className="flex gap-2">
+                  <input
+                    id="n_password"
+                    value={form.password}
+                    onChange={set('password')}
+                    className={`field ${errors.password ? 'border-[#B4472F]' : ''}`}
+                  />
+                  <button type="button" onClick={suggest} className="btn btn-ghost shrink-0 px-4 py-2.5 text-tiny">
+                    Suggest
+                  </button>
+                </div>
+                {errors.password ? (
+                  <p className="mt-1.5 text-tiny text-[#8F3623]">{errors.password}</p>
+                ) : (
+                  <p className="mt-1.5 text-tiny text-soft">
+                    At least 8 characters with a number. Pass it on and ask them to change it.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="label" htmlFor="n_role">Role</label>
+                <select id="n_role" value={form.role} onChange={set('role')} className="field">
+                  <option value="customer">Customer — shop, wallet, referral link</option>
+                  <option value="staff">Staff — full admin access</option>
+                  <option value="admin">Admin — full admin access</option>
+                </select>
+                <p className="mt-1.5 text-tiny text-soft">
+                  Staff and admin both see every order and customer, and can change settings.
+                  Only choose them for people who should.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <footer className="flex items-center gap-3 border-t border-line px-6 py-4">
+            <button disabled={busy} className="btn btn-solid px-6 py-2.5 disabled:opacity-50">
+              {busy ? 'Creating…' : 'Create account'}
+            </button>
+            <button type="button" onClick={onClose} className="btn btn-ghost px-6 py-2.5">Cancel</button>
+          </footer>
+        </form>
+      </aside>
+    </>
+  )
+}
+
+function F({ id, label, err, hint, ...props }) {
+  return (
+    <div>
+      <label className="label" htmlFor={id}>{label}</label>
+      <input id={id} className={`field ${err ? 'border-[#B4472F]' : ''}`} {...props} />
+      {err ? (
+        <p className="mt-1.5 text-tiny text-[#8F3623]">{err}</p>
+      ) : hint ? (
+        <p className="mt-1.5 text-tiny text-soft">{hint}</p>
+      ) : null}
+    </div>
   )
 }
 

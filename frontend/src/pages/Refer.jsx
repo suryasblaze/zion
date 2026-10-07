@@ -71,13 +71,14 @@ export default function Refer() {
             <div className="border border-line bg-surface p-10 text-center">
               <p className="script mb-2">Your link is one step away</p>
               <p className="mx-auto max-w-[42ch] text-soft">
-                Referral links are created with your account. Register and yours is ready
-                immediately — no waiting, no approval.
+                Every account has its own referral link. Sign in and yours is already there.
               </p>
               <div className="mt-7 flex flex-wrap justify-center gap-3">
-                <Link to="/signup" className="btn btn-solid">Create an account</Link>
-                <Link to="/signin" className="btn btn-ghost">I already have one</Link>
+                <Link to="/signin" className="btn btn-solid">Sign in</Link>
               </div>
+              <p className="mx-auto mt-4 max-w-[40ch] text-tiny text-soft">
+                No account? We set them up by hand — ask us and we will sort it out.
+              </p>
             </div>
           ) : (
             <>

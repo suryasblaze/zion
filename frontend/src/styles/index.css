@@ -132,3 +132,6 @@
   70%, 100% { transform: scale(1.45); opacity: 0; }
 }
 
+
+/* Button spinner. */
+@keyframes spin { to { transform: rotate(360deg); } }

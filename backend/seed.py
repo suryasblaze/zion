@@ -23,7 +23,8 @@ MIGRATIONS = os.path.join(ROOT, "db", "migrations")
 SEEDS = [os.path.join(ROOT, "db", "seed.sql"),
          os.path.join(ROOT, "db", "seed_products.sql"),
          os.path.join(ROOT, "db", "seed_product_detail.sql"),
-         os.path.join(ROOT, "db", "seed_event.sql")]
+         os.path.join(ROOT, "db", "seed_event.sql"),
+         os.path.join(ROOT, "db", "seed_auth.sql")]
 
 
 def require_sql_files():

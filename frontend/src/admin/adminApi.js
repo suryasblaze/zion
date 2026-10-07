@@ -27,6 +27,7 @@ export const adminApi = {
 
   // customers
   customers: (query = '') => call(`/admin/customers${query}`, auth),
+  createCustomer: (body) => call('/admin/customers', { ...auth, method: 'POST', body }),
   updateCustomer: (id, body) => call(`/admin/customers/${id}`, { ...auth, method: 'PATCH', body }),
   adjustWallet: (id, body) => call(`/admin/customers/${id}/wallet`, { ...auth, method: 'POST', body }),
 

@@ -452,6 +452,70 @@ def customers():
     return ok(to_jsonable(rows), meta={"page": page, "limit": limit, "total": total})
 
 
+@bp.post("/customers")
+@admin_required
+def create_customer():
+    """
+    Create an account by hand.
+
+    This is how accounts are made now that public registration is shut.
+    The role is chosen explicitly rather than defaulting to admin: an
+    account that can read every customer record should be a decision, not
+    an accident of leaving a field blank.
+    """
+    from utils.auth import hash_password
+    from utils.helpers import generate_referral_code, password_problems, valid_email, valid_phone
+
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    full_name = (data.get("full_name") or "").strip()
+    phone = (data.get("phone") or "").strip() or None
+    password = data.get("password") or ""
+    role = (data.get("role") or "customer").strip()
+
+    errors = {}
+    if not valid_email(email):
+        errors["email"] = "Enter a valid email address."
+    if not full_name:
+        errors["full_name"] = "Give the account a name."
+    if not valid_phone(phone):
+        errors["phone"] = "Enter a valid phone number, or leave it blank."
+    if role not in ("customer", "staff", "admin"):
+        errors["role"] = "Choose customer, staff or admin."
+    problems = password_problems(password)
+    if problems:
+        errors["password"] = " ".join(problems)
+    if errors:
+        return fail("Check the highlighted fields.", 422, errors=errors)
+
+    if db.scalar("select 1 from users where email = %s", (email,)):
+        return fail("An account with that email already exists.", 409, code="email_taken")
+
+    with db.transaction() as cur:
+        code = generate_referral_code(full_name)
+        for _ in range(5):
+            cur.execute("select 1 from users where referral_code = %s", (code,))
+            if not cur.fetchone():
+                break
+            code = generate_referral_code(full_name)
+
+        cur.execute(
+            """insert into users
+                 (email, password_hash, full_name, phone, role, referral_code,
+                  email_verified)
+               values (%s,%s,%s,%s,%s,%s,true)
+               returning id, email, full_name, phone, role, referral_code,
+                         wallet_balance, is_active, created_at""",
+            (email, hash_password(password), full_name, phone, role, code),
+        )
+        row = cur.fetchone()
+
+    _audit("create", "users", row["id"], {"email": email, "role": role})
+    return ok(to_jsonable(row),
+              message=f"Account created for {full_name}. They can sign in now.",
+              status=201)
+
+
 @bp.post("/customers/<user_id>/wallet")
 @admin_required
 def adjust_wallet(user_id):

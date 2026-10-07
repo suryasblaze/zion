@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -89,8 +89,10 @@ export default function App() {
         <Route path="/checkout" element={<Storefront><Checkout /></Storefront>} />
 
         {/* accounts */}
-        <Route path="/signin" element={<Storefront><Auth mode="signin" /></Storefront>} />
-        <Route path="/signup" element={<Storefront><Auth mode="signup" /></Storefront>} />
+        <Route path="/signin" element={<Storefront><Auth /></Storefront>} />
+        {/* No public registration: accounts are made under Admin > Customers.
+            Anyone with an old /signup link lands on sign-in instead. */}
+        <Route path="/signup" element={<Navigate to="/signin" replace />} />
         <Route path="/account" element={<Storefront><Account /></Storefront>} />
 
         {/* referral links land here, get attributed, then invite a signup */}

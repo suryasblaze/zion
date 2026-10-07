@@ -61,7 +61,7 @@ export default function ReferralCatch() {
               <p className="mx-auto mt-6 max-w-[46ch] text-lede text-soft">
                 {info?.discount_label ? (
                   <>
-                    Create an account and your first order gets{' '}
+                    Your first order gets{' '}
                     <span className="text-gold">{info.discount_label}</span>. Six caffeine-free
                     infusions, hand-packed in Tamil Nadu.
                   </>
@@ -70,8 +70,8 @@ export default function ReferralCatch() {
                 )}
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link to="/signup" className="btn btn-solid">
-                  Claim my discount
+                <Link to="/signin" className="btn btn-solid">
+                  Sign in to claim it
                 </Link>
                 <Link to="/shop" className="btn btn-ghost">
                   Look around first

@@ -16,6 +16,20 @@ PUBLIC_FIELDS = """id, email, full_name, phone, role, referral_code,
 
 @bp.post("/register")
 def register():
+    """
+    Public registration, off by default.
+
+    Accounts are made by an admin in the panel, so this stays shut unless
+    someone deliberately opens it. Worth knowing before you do: the
+    referral programme acquires referees here and nowhere else, so with
+    this closed a referral link has nobody to convert.
+    """
+    if not settings_service.get_bool("auth.public_signup", False):
+        return fail(
+            "New accounts are created by ZION. Ask us and we will set one up for you.",
+            403, code="signup_closed",
+        )
+
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
