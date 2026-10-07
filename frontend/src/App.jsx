@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 
 import Header from './components/Header'
@@ -20,16 +20,22 @@ import Account from './pages/Account'
 import Checkout from './pages/Checkout'
 import NotFound from './pages/NotFound'
 
-import AdminShell from './admin/AdminShell'
-import Dashboard from './admin/Dashboard'
-import AdminOrders from './admin/Orders'
-import AdminProducts from './admin/Products'
-import AdminCustomers from './admin/Customers'
-import AdminReferrals from './admin/Referrals'
-import AdminContent, { Coupons } from './admin/Content'
-import AdminSettings from './admin/Settings'
-import DesignStudio from './admin/DesignStudio'
-import AdminEventSignups from './admin/EventSignups'
+/* Admin is loaded on demand. Someone buying tea never fetches it. */
+const AdminShell = lazy(() => import('./admin/AdminShell'))
+const Dashboard = lazy(() => import('./admin/Dashboard'))
+const AdminOrders = lazy(() => import('./admin/Orders'))
+const AdminProducts = lazy(() => import('./admin/Products'))
+const AdminCustomers = lazy(() => import('./admin/Customers'))
+const AdminReferrals = lazy(() => import('./admin/Referrals'))
+const AdminContent = lazy(() => import('./admin/Content'))
+const Coupons = lazy(() => import('./admin/Content').then((m) => ({ default: m.Coupons })))
+const AdminSettings = lazy(() => import('./admin/Settings'))
+const DesignStudio = lazy(() => import('./admin/DesignStudio'))
+const AdminEventSignups = lazy(() => import('./admin/EventSignups'))
+
+function AdminLoading() {
+  return <div className="grid min-h-screen place-items-center text-soft">Loading…</div>
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -91,7 +97,14 @@ export default function App() {
         <Route path="/r/:code" element={<Storefront><ReferralCatch /></Storefront>} />
 
         {/* ----------------------------------------------------- admin */}
-        <Route path="/admin" element={<AdminShell />}>
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<AdminLoading />}>
+              <AdminShell />
+            </Suspense>
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="products" element={<AdminProducts />} />

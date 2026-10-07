@@ -14,7 +14,7 @@ import { useAuth, useSettings } from '../context/StoreProvider'
  */
 export default function Auth({ mode = 'signin' }) {
   const isSignup = mode === 'signup'
-  const { login, register, user, startDemo } = useAuth()
+  const { login, register, user } = useAuth()
   const { get } = useSettings()
   const navigate = useNavigate()
   const location = useLocation()
@@ -187,25 +187,6 @@ export default function Auth({ mode = 'signin' }) {
                 : 'Sign in'}
             </button>
           </form>
-
-          {/* No backend needed — walks the real admin screens on canned data. */}
-          <div className="mt-8 border-t border-line pt-7">
-            <p className="text-[0.95rem]">Just looking?</p>
-            <p className="mt-1 max-w-[42ch] text-tiny text-soft">
-              Open the admin panel with sample orders, customers and referrals. Nothing is saved,
-              and no database is needed.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                startDemo()
-                navigate('/admin', { replace: true })
-              }}
-              className="btn btn-gold mt-4 w-full"
-            >
-              Open the admin demo
-            </button>
-          </div>
 
           <p className="mt-6 text-[0.95rem] text-soft">
             {isSignup ? 'Already have an account? ' : 'New here? '}

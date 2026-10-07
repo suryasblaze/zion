@@ -1,20 +1,8 @@
 import { request, requestRaw } from '../lib/api'
-import { demoResolve, isDemo } from '../data/demo'
 
 const auth = { auth: true }
 
-/**
- * In demo mode every admin call is answered from fixtures instead of the
- * network, and writes throw a plain "read-only" error the screens already
- * surface as a toast. Outside demo mode this is a no-op passthrough.
- */
-const call = (path, opts = {}) => {
-  if (isDemo()) {
-    const answer = demoResolve(path, opts.method || 'GET')
-    if (answer !== undefined) return Promise.resolve(answer)
-  }
-  return request(path, opts)
-}
+const call = (path, opts = {}) => request(path, opts)
 
 export const adminApi = {
   dashboard: () => call('/admin/dashboard', auth),
@@ -56,10 +44,6 @@ export const adminApi = {
   // event sampling. The list carries stats and tally alongside the rows,
   // so it is read from the full envelope rather than just `data`.
   eventSignups: async (query = '') => {
-    if (isDemo()) {
-      const answer = demoResolve(`/admin/event_signups${query}`, 'GET')
-      if (answer !== undefined) return answer
-    }
     const res = await requestRaw(`/events/admin/signups${query}`)
     return { rows: res.data || [], stats: res.stats || null, tally: res.tally || [] }
   },

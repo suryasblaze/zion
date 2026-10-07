@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { uploadMedia } from '../lib/api'
-import { isDemo } from '../data/demo'
 import { adminApi } from './adminApi'
 
 /**
@@ -20,10 +19,6 @@ export default function MediaPicker({ id, value, onChange, folder = 'uploads' })
 
   const send = async (file) => {
     if (!file) return
-    if (isDemo()) {
-      setError('Demo mode is read-only — uploading would work on a live shop.')
-      return
-    }
     setBusy(true)
     setError(null)
     try {

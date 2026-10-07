@@ -5,8 +5,6 @@
  * callers that pass a `fallback` get the local catalogue instead of an
  * error, so the storefront is developable before Supabase is connected.
  */
-import { demoStorefront, isDemo } from '../data/demo'
-
 const BASE = import.meta.env.VITE_API_URL || '/api'
 
 const TOKEN_KEY = 'zion.token'
@@ -34,12 +32,6 @@ export class ApiError extends Error {
 }
 
 export async function request(path, { method = 'GET', body, auth = false, fallback } = {}) {
-  // Demo mode answers the storefront's authenticated reads locally.
-  if (isDemo() && method === 'GET') {
-    const answer = demoStorefront(path)
-    if (answer !== undefined) return answer
-  }
-
   const headers = { 'Content-Type': 'application/json' }
   if (auth) {
     const t = tokens.get()

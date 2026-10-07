@@ -1,0 +1,56 @@
+# /etc/systemd/system/zion-api.service
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now zion-api
+#   sudo journalctl -u zion-api -f
+
+[Unit]
+Description=ZION Herbs API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=zion
+Group=zion
+WorkingDirectory=/var/www/zion/backend
+EnvironmentFile=/var/www/zion/backend/.env
+
+# Bound to loopback on purpose: nginx is the only thing that should be
+# able to reach it. Workers stay low because each one opens its own
+# Postgres pool and Supabase has a finite connection budget --
+# workers x pool max_size must stay under it.
+ExecStart=/var/www/zion/venv/bin/gunicorn app:app \
+    --bind 127.0.0.1:5000 \
+    --workers 3 \
+    --threads 4 \
+    --worker-class gthread \
+    --timeout 60 \
+    --graceful-timeout 30 \
+    --keep-alive 5 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info
+
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+# --- hardening ---------------------------------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/zion/backend
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

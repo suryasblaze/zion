@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react'
 import { api, tokens, visitorToken } from '../lib/api'
-import { DEMO_USER, disableDemo, enableDemo, isDemo } from '../data/demo'
 import { PRODUCTS } from '../data/catalog'
 
 /* ===================================================================== */
@@ -92,11 +91,6 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    // Demo mode signs you in as an admin with no API behind it.
-    if (isDemo()) {
-      setUser(DEMO_USER)
-      return setReady(true)
-    }
     if (!tokens.get()) return setReady(true)
     api
       .me()
@@ -104,11 +98,6 @@ export function AuthProvider({ children }) {
       .catch(() => tokens.clear())
       .finally(() => setReady(true))
   }, [])
-
-  const startDemo = () => {
-    enableDemo()
-    setUser(DEMO_USER)
-  }
 
   const login = async (email, password) => {
     const res = await api.login({ email, password })
@@ -131,12 +120,11 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     tokens.clear()
-    disableDemo()
     setUser(null)
   }
 
   return (
-    <AuthCtx.Provider value={{ user, ready, login, register, logout, setUser, startDemo, demo: isDemo() }}>
+    <AuthCtx.Provider value={{ user, ready, login, register, logout, setUser }}>
       {children}
     </AuthCtx.Provider>
   )

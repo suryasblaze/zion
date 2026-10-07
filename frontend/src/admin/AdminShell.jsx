@@ -39,7 +39,7 @@ const NAV = [
 ]
 
 export default function AdminShell() {
-  const { user, ready, demo, logout } = useAuth()
+  const { user, ready } = useAuth()
   const location = useLocation()
   const [open, setOpen] = useState(false)
 
@@ -130,17 +130,6 @@ export default function AdminShell() {
           </button>
           <span className="font-display tracking-[0.2em]">ZION Admin</span>
         </div>
-
-        {demo && (
-          <div className="flex flex-wrap items-center gap-3 border-b border-gold bg-gold/[0.07] px-5 py-2.5 lg:px-9">
-            <span className="text-tiny text-gold">
-              Demo — sample data, and nothing you change here is saved.
-            </span>
-            <button onClick={logout} className="ml-auto text-tiny text-soft underline underline-offset-4 hover:text-ink">
-              Leave the demo
-            </button>
-          </div>
-        )}
 
         <Outlet />
       </div>

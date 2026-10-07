@@ -59,7 +59,7 @@ export default function Collection({ table, embedded = false }) {
       setEditing(null)
       load()
     } catch (e) {
-      setToast({ text: e.message, tone: e.demo ? 'ok' : 'error' })
+      setToast({ text: e.message, tone: 'error' })
       throw e
     }
   }
