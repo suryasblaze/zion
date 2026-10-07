@@ -22,7 +22,7 @@ const FALLBACK = {
   headline: 'Pick a tea. It is on us.',
   intro:
     'Tell us where to find you and which of the six you would like to try. Show the code on the next screen at the counter and it is yours.',
-  thank_you: 'Show this code at the counter and we will pour yours.',
+  thank_you: 'Show this code at the counter to collect yours.',
   closed_message: 'Sampling has finished for this event. Thank you to everyone who came by.',
   collect_email: false,
   products: TEAS.map((t) => ({
@@ -378,7 +378,7 @@ export default function EventSignup() {
           </fieldset>
 
           <button disabled={busy} className="btn btn-solid w-full py-4 text-[1rem] disabled:opacity-50">
-            {busy ? 'Sending…' : 'Claim my free cup'}
+            {busy ? 'Sending…' : 'Claim my free sample'}
           </button>
 
           <p className="text-center text-tiny text-soft">

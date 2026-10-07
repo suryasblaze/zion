@@ -35,7 +35,7 @@ values
  'textarea', '[]', null, null, true, 5),
 
 ('event.thank_you',
- '"Show this code at the counter and we will pour yours."',
+ '"Show this code at the counter to collect yours."',
  'string', 'event',
  'Thank-you message',
  'Shown above the claim code after someone submits.',
