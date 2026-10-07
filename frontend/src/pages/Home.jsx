@@ -8,6 +8,36 @@ import { accentStyle, inr } from '../lib/format'
 
 const SLIDE_MS = 5000
 
+/**
+ * How many product cards sit on a row right now, matching the grid's own
+ * breakpoints. The detail panel is rendered after the row that holds the
+ * open card, so this has to agree with the CSS: chunking by a fixed four
+ * meant that on a phone -- one card per row -- tapping the first card
+ * opened the panel three cards further down, off screen, which read as
+ * the button doing nothing.
+ */
+function useColumns() {
+  const read = () => {
+    if (typeof window === 'undefined') return 4
+    if (window.matchMedia('(min-width: 1024px)').matches) return 4   // lg
+    if (window.matchMedia('(min-width: 640px)').matches) return 2    // sm
+    return 1
+  }
+
+  const [cols, setCols] = useState(read)
+
+  useEffect(() => {
+    const queries = ['(min-width: 1024px)', '(min-width: 640px)'].map((q) =>
+      window.matchMedia(q)
+    )
+    const onChange = () => setCols(read())
+    queries.forEach((q) => q.addEventListener('change', onChange))
+    return () => queries.forEach((q) => q.removeEventListener('change', onChange))
+  }, [])
+
+  return cols
+}
+
 export default function Home() {
   const [active, setActive] = useState(0)
   const [openSlug, setOpenSlug] = useState(null)
@@ -17,9 +47,21 @@ export default function Home() {
 
   const coinName = get('wallet.coin_name', 'ZION Coins')
 
+  // On a phone the panel can still open below the fold once the card is
+  // mid-screen. Bring it up, but only on an actual open, and never
+  // against someone who has asked for reduced motion.
+  useEffect(() => {
+    if (!openSlug) return
+    const el = document.getElementById(`detail-${openSlug}`)
+    if (!el) return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' })
+  }, [openSlug])
+
+  const cols = useColumns()
   const all = [...TEAS, ...SETS]
   const rows = []
-  for (let i = 0; i < all.length; i += 4) rows.push(all.slice(i, i + 4))
+  for (let i = 0; i < all.length; i += cols) rows.push(all.slice(i, i + cols))
 
   const go = (step) => setActive((i) => (i + step + TEAS.length) % TEAS.length)
 
@@ -196,6 +238,7 @@ export default function Home() {
 
                 {openInRow && (
                   <ProductDetailPanel
+                    id={`detail-${openInRow.slug}`}
                     product={openInRow}
                     onAdd={() => add(openInRow, openInRow.sizes[0])}
                     onClose={() => setOpenSlug(null)}

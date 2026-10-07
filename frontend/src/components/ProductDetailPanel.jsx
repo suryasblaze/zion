@@ -14,19 +14,23 @@ import { accentStyle, inr } from '../lib/format'
  * the gift sets have no single brewing temperature, and an empty "How to
  * brew" row reads as a bug.
  */
-export default function ProductDetailPanel({ product, onAdd, onClose }) {
+export default function ProductDetailPanel({ product, onAdd, onClose, id }) {
   const sizes = product.sizes || []
   const sections = buildSections(product)
   const [openKey, setOpenKey] = useState(sections[0]?.key ?? null)
 
   return (
     <div
+      id={id}
       style={accentStyle(product)}
-      className="border-t border-line bg-surface px-6 py-7 sm:px-8"
+      className="scroll-mt-24 border-t border-line bg-surface px-5 py-6 sm:px-8 sm:py-7"
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,300px)_1fr]">
         {/* ------------------------------------------- image + buy */}
-        <div className="lg:sticky lg:top-24 lg:self-start">
+        {/* Full width on a phone, where that reads well. Capped between
+            sm and lg, where a single-column panel would otherwise stretch
+            the cup across the whole tablet. */}
+        <div className="sm:max-w-[320px] lg:sticky lg:top-24 lg:max-w-none lg:self-start">
           <Link
             to={`/product/${product.slug}`}
             className="block overflow-hidden border border-line bg-paper"
