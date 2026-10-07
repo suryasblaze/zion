@@ -34,6 +34,11 @@ sudo mkdir -p /var/www/zion && sudo chown zion:zion /var/www/zion
 
 ## 2. Code
 
+Two ways, and the second is lighter.
+
+**Clone on the server** — one command per deploy afterwards, but the box
+needs Git and Node.
+
 ```bash
 sudo -u zion -H bash
 cd /var/www/zion
@@ -41,6 +46,45 @@ git clone https://github.com/suryasblaze/zion.git .
 python3 -m venv venv
 ./venv/bin/pip install -r backend/requirements.txt
 ```
+
+**Or build locally and upload.** The server then needs **no Node.js at
+all** — nginx only ever serves files that are already built.
+
+```bash
+# on your machine
+cd frontend && npm run build
+scp -r dist/*  zion@server:/var/www/zion/dist/
+scp -r backend zion@server:/var/www/zion/
+```
+
+```bash
+# on the server, once
+cd /var/www/zion
+python3 -m venv venv
+./venv/bin/pip install -r backend/requirements.txt
+```
+
+### What the server actually needs
+
+```
+/var/www/zion/
+├── dist/        the built frontend (~8 MB)
+├── backend/     the API
+└── venv/        created on the server, never copied
+```
+
+`db/` is **not** required. Only `seed.py` reads it, and only when
+migrating or seeding — which you do once, from wherever the schema is
+applied. The API, `setup_check.py`, `maintenance.py` and
+`seed.py --admin` never touch those files. Run `seed.py` without them and
+it tells you so rather than failing obscurely.
+
+Copy `db/` across only when a new migration lands, or paste the migration
+into the Supabase SQL editor instead.
+
+Never copy: `node_modules/`, `frontend/src/`, `__pycache__/`, `tea/`, a
+local `venv/` (a Windows one will not run on Linux), or `.env` — write
+that on the server.
 
 ## 3. Configuration
 
@@ -66,13 +110,25 @@ It connects to Supabase and reports what is missing. Only continue on
 
 ## 4. Database
 
+If the schema is not applied yet, and `db/` is present:
+
 ```bash
 ../venv/bin/python seed.py        # migrations + seed + admin account
 ```
 
-Safe to re-run. On an existing database it applies only what is new.
+Safe to re-run; on an existing database it applies only what is new.
+
+If the schema is **already** applied — the usual case, because it was set
+up from a developer machine — you only need the admin account, and that
+needs no SQL files:
+
+```bash
+../venv/bin/python seed.py --admin
+```
 
 ## 5. Frontend
+
+Only if you are building on the server:
 
 ```bash
 cd /var/www/zion/frontend
@@ -81,7 +137,11 @@ npm run build
 ```
 
 No environment variables. The app calls `/api` on its own origin, which
-nginx proxies.
+nginx proxies. If you uploaded `dist/` instead, there is nothing to do
+here.
+
+nginx's `root` is `/var/www/zion/dist`. Put the build anywhere else and
+change that line, or you get a 403 and a blank page.
 
 ## 6. The API as a service
 
@@ -150,6 +210,8 @@ sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw enable
 ---
 
 ## Deploying a change
+
+**If you cloned on the server:**
 
 ```bash
 cd /var/www/zion && ./deploy/deploy.sh

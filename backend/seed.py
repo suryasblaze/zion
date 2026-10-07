@@ -26,6 +26,38 @@ SEEDS = [os.path.join(ROOT, "db", "seed.sql"),
          os.path.join(ROOT, "db", "seed_event.sql")]
 
 
+def require_sql_files():
+    """
+    The SQL lives in db/, one level above this file. A production box
+    often has only backend/ on it, because the schema was applied from a
+    developer machine and the server never needs to migrate. That is a
+    reasonable way to deploy -- so say so plainly rather than dying on a
+    file-not-found three frames deep.
+    """
+    if os.path.isdir(MIGRATIONS):
+        return
+
+    lines = [
+        "",
+        "  The SQL files are not here.",
+        f"  Expected: {MIGRATIONS}",
+        "",
+        "  Only migrating and seeding need them. If this is a server that",
+        "  just runs the API, you do not need them at all:",
+        "",
+        "    python seed.py --admin     creates or resets the admin login",
+        "    python app.py              runs the API",
+        "",
+        "  To migrate here, copy the repo's db/ folder next to backend/,",
+        "  or apply the migrations from the Supabase SQL editor.",
+        "",
+    ]
+    print("\n".join(lines))
+    sys.exit(1)
+
+
+
+
 def run_file(path):
     with open(path, encoding="utf-8") as fh:
         sql_text = fh.read()
@@ -35,6 +67,7 @@ def run_file(path):
 
 
 def migrate():
+    require_sql_files()
     print("Running migrations")
     for name in sorted(os.listdir(MIGRATIONS)):
         if name.endswith(".sql"):
@@ -42,6 +75,7 @@ def migrate():
 
 
 def seed():
+    require_sql_files()
     print("Loading seed data")
     for path in SEEDS:
         run_file(path)
