@@ -156,7 +156,7 @@ def signup():
                   product_id, product_name, product_slug,
                   claim_code, source, ip_hash, user_agent)
                values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-               returning claim_code, product_name, full_name, created_at""",
+               returning claim_code, product_name, product_slug, full_name, created_at""",
             (cfg["slug"], cfg["name"], name, phone, email,
              product["id"], product["name"], product["slug"],
              code, (data.get("source") or "link")[:32],

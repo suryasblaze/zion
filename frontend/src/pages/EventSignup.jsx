@@ -148,7 +148,9 @@ export default function EventSignup() {
 
   /* ---------------------------------------------------- thank you */
   if (done) {
-    const chosen = cfg.products.find((p) => p.name === done.product_name)
+    const chosen =
+      cfg.products.find((p) => p.slug === done.product_slug) ||
+      cfg.products.find((p) => p.name === done.product_name)
     return (
       <>
         <Seo title={`You are on the list — ${cfg.name}`} noindex />
@@ -170,10 +172,25 @@ export default function EventSignup() {
                 {done.claim_code}
               </p>
 
-              <p className="mt-5 border-t border-line pt-4 text-soft">
-                <span className="block text-tiny">You chose</span>
-                <span className="font-display text-[1.3rem] text-ink">{done.product_name}</span>
-              </p>
+              <div className="mt-5 border-t border-line pt-5">
+                {chosen && (
+                  <img
+                    src={`/products/${chosen.slug}-tile.jpg`}
+                    alt={`ZION ${done.product_name}`}
+                    className="mx-auto mb-3 h-28 w-28 border border-line object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                )}
+                <p className="text-soft">
+                  <span className="block text-tiny">You chose</span>
+                  <span className="font-display text-[1.3rem] text-ink">{done.product_name}</span>
+                  {chosen?.tagline && (
+                    <span className="mt-0.5 block text-tiny">{chosen.tagline}</span>
+                  )}
+                </p>
+              </div>
 
               <button
                 onClick={async () => {
