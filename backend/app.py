@@ -32,6 +32,7 @@ def create_app():
     from controllers.catalog_controller import bp as catalog_bp
     from controllers.checkout_controller import bp as checkout_bp
     from controllers.content_controller import bp as content_bp
+    from controllers.event_controller import bp as event_bp
     from controllers.media_controller import bp as media_bp
     from controllers.payment_controller import bp as payment_bp
     from controllers.referral_controller import bp as referral_bp
@@ -40,7 +41,7 @@ def create_app():
 
     for blueprint in (auth_bp, catalog_bp, checkout_bp, referral_bp,
                       wallet_bp, content_bp, admin_bp, seo_bp,
-                      payment_bp, media_bp):
+                      payment_bp, media_bp, event_bp):
         app.register_blueprint(blueprint)
 
     @app.get("/api/health")

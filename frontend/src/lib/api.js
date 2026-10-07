@@ -91,6 +91,10 @@ export const api = {
   wallet: () => request('/wallet', { auth: true }),
   walletHistory: () => request('/wallet/history', { auth: true }),
 
+  // ---- event sampling
+  eventConfig: (fallback) => request('/events/config', { fallback }),
+  eventSignup: (body) => request('/events/signup', { method: 'POST', body }),
+
   // ---- payments
   paymentMethods: (fallback) => request('/payments/methods', { fallback }),
   razorpayOrder: (body) => request('/payments/razorpay/order', { method: 'POST', body, auth: true }),
@@ -103,6 +107,23 @@ export const api = {
   quote: (body) => request('/checkout/quote', { method: 'POST', body, auth: true }),
   placeOrder: (body) => request('/checkout/place', { method: 'POST', body, auth: true }),
   myOrders: () => request('/orders', { auth: true }),
+}
+
+/**
+ * Like request(), but hands back the whole envelope rather than just
+ * `data`. Needed where a response carries siblings such as `stats` or
+ * `tally` that would otherwise be discarded.
+ */
+export async function requestRaw(path) {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(tokens.get() ? { Authorization: `Bearer ${tokens.get()}` } : {}),
+    },
+  })
+  const payload = await res.json().catch(() => ({}))
+  if (!res.ok) throw new ApiError(payload.message || 'Something went wrong.', res.status, payload)
+  return payload
 }
 
 /**

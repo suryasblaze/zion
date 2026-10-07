@@ -21,7 +21,9 @@ from utils.helpers import generate_referral_code
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MIGRATIONS = os.path.join(ROOT, "db", "migrations")
 SEEDS = [os.path.join(ROOT, "db", "seed.sql"),
-         os.path.join(ROOT, "db", "seed_products.sql")]
+         os.path.join(ROOT, "db", "seed_products.sql"),
+         os.path.join(ROOT, "db", "seed_product_detail.sql"),
+         os.path.join(ROOT, "db", "seed_event.sql")]
 
 
 def run_file(path):

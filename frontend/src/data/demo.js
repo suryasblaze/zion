@@ -382,6 +382,39 @@ const MEDIA = [
   created_at: daysAgo(20 - i),
 }))
 
+const SIGNUPS = [
+  ['Meera Rajan', '9840012345', 'Chamomile', 'chamomile', '#D9A21B', 'claimed', 2],
+  ['Karthik S', '9840022334', 'Nannari', 'nannari', '#8A4B24', 'pending', 3],
+  ['Anitha Kumar', '9840033445', 'Butterfly Pea', 'butterfly-pea', '#2B3F8C', 'claimed', 4],
+  ['Ravi Chandran', '9840044556', 'Hibiscus', 'hibiscus', '#9E1B32', 'pending', 5],
+  ['Divya Menon', '9840055667', 'Chamomile', 'chamomile', '#D9A21B', 'pending', 6],
+  ['Suresh Babu', '9840066778', 'Lavender', 'lavender', '#6B4E9B', 'claimed', 8],
+  ['Lakshmi V', '9840077889', 'Butterfly Pea', 'butterfly-pea', '#2B3F8C', 'pending', 9],
+  ['Arjun Nair', '9840088990', 'Aavaram Poo', 'aavaram-poo', '#E0B01F', 'pending', 11],
+].map(([full_name, phone, product_name, product_slug, accent_color, status, hoursAgo], i) => ({
+  id: `demo-signup-${i}`,
+  full_name, phone, product_name, product_slug, accent_color, status,
+  email: null,
+  claim_code: `ZN-${['4K7Q','9M2T','7XPD','3RHN','8VCA','2JLE','6YWF','5QKM'][i]}`,
+  event_slug: 'default',
+  event_name: 'ZION tasting',
+  source: 'link',
+  claimed_at: status === 'claimed' ? daysAgo(hoursAgo / 24) : null,
+  created_at: daysAgo(hoursAgo / 24),
+}))
+
+const SIGNUP_TALLY = Object.values(
+  SIGNUPS.reduce((acc, s) => {
+    acc[s.product_name] = acc[s.product_name] || {
+      product_name: s.product_name, product_slug: s.product_slug,
+      accent_color: s.accent_color, signups: 0, claimed: 0,
+    }
+    acc[s.product_name].signups += 1
+    if (s.status === 'claimed') acc[s.product_name].claimed += 1
+    return acc
+  }, {})
+).sort((a, b) => b.signups - a.signups)
+
 const DASHBOARD = {
   stats: {
     orders_30d: 58,
@@ -450,6 +483,28 @@ export function demoResolve(path, method = 'GET') {
   if (route === '/admin/settings/all') return settingsGrouped()
   if (route === '/admin/messages') return MESSAGES
   if (route === '/admin/media') return wrap(MEDIA)
+
+  if (route === '/admin/event_signups') {
+    const status = params.get('status')
+    const q = (params.get('q') || '').toLowerCase()
+    let rows = SIGNUPS
+    if (status && status !== 'all') rows = rows.filter((r) => r.status === status)
+    if (q) {
+      rows = rows.filter((r) =>
+        (r.full_name + r.phone + r.claim_code).toLowerCase().includes(q)
+      )
+    }
+    return {
+      rows,
+      stats: {
+        total: SIGNUPS.length,
+        pending: SIGNUPS.filter((r) => r.status === 'pending').length,
+        claimed: SIGNUPS.filter((r) => r.status === 'claimed').length,
+        today: SIGNUPS.length,
+      },
+      tally: SIGNUP_TALLY,
+    }
+  }
   if (route === '/admin/audit') return []
 
   if (route === '/admin/orders') {

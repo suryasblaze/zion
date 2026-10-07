@@ -1,4 +1,4 @@
-import { request } from '../lib/api'
+import { request, requestRaw } from '../lib/api'
 import { demoResolve, isDemo } from '../data/demo'
 
 const auth = { auth: true }
@@ -52,6 +52,20 @@ export const adminApi = {
   // media library
   media: (query = '') => call(`/admin/media${query}`, auth),
   deleteMedia: (id) => call(`/admin/media/${id}`, { ...auth, method: 'DELETE' }),
+
+  // event sampling. The list carries stats and tally alongside the rows,
+  // so it is read from the full envelope rather than just `data`.
+  eventSignups: async (query = '') => {
+    if (isDemo()) {
+      const answer = demoResolve(`/admin/event_signups${query}`, 'GET')
+      if (answer !== undefined) return answer
+    }
+    const res = await requestRaw(`/events/admin/signups${query}`)
+    return { rows: res.data || [], stats: res.stats || null, tally: res.tally || [] }
+  },
+  claimSignup: (id) => call(`/events/admin/signups/${id}/claim`, { ...auth, method: 'POST' }),
+  unclaimSignup: (id) => call(`/events/admin/signups/${id}/unclaim`, { ...auth, method: 'POST' }),
+  lookupSignup: (code) => call(`/events/admin/lookup/${encodeURIComponent(code)}`, auth),
 
   messages: () => call('/admin/messages', auth),
   audit: () => call('/admin/audit', auth),

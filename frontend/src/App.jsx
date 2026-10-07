@@ -14,6 +14,7 @@ import Faq from './pages/Faq'
 import Brewing from './pages/Brewing'
 import OurRoots from './pages/OurRoots'
 import ReferralCatch from './pages/ReferralCatch'
+import EventSignup from './pages/EventSignup'
 import Auth from './pages/Auth'
 import Account from './pages/Account'
 import Checkout from './pages/Checkout'
@@ -28,6 +29,7 @@ import AdminReferrals from './admin/Referrals'
 import AdminContent, { Coupons } from './admin/Content'
 import AdminSettings from './admin/Settings'
 import DesignStudio from './admin/DesignStudio'
+import AdminEventSignups from './admin/EventSignups'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -73,6 +75,8 @@ export default function App() {
         <Route path="/brewing" element={<Storefront><Brewing /></Storefront>} />
         <Route path="/refer" element={<Storefront><Refer /></Storefront>} />
         <Route path="/faq" element={<Storefront><Faq /></Storefront>} />
+        {/* The event link. Short on purpose: it gets typed off a poster. */}
+        <Route path="/try" element={<Storefront><EventSignup /></Storefront>} />
         <Route path="/checkout" element={<Storefront><Checkout /></Storefront>} />
 
         {/* accounts */}
@@ -93,6 +97,7 @@ export default function App() {
           <Route path="coupons" element={<Coupons />} />
           <Route path="content" element={<AdminContent />} />
           <Route path="design" element={<DesignStudio />} />
+          <Route path="signups" element={<AdminEventSignups />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 

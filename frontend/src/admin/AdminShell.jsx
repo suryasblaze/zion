@@ -24,6 +24,7 @@ const NAV = [
     group: 'Growth',
     items: [
       ['Referrals', '/admin/referrals', 'share'],
+      ['Event sign-ups', '/admin/signups', 'ticket'],
       ['Coupons', '/admin/coupons', 'tag'],
     ],
   },
@@ -157,6 +158,7 @@ function Icon({ name }) {
     user: 'M4 20c0-4 3.5-6 8-6s8 2 8 6M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
     share: 'M6 12a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM23 5.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM23 18.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM6 11l12-5M6 13l12 5',
     tag: 'M3 12V4h8l10 10-8 8L3 12zM7.5 7.5h.01',
+    ticket: 'M3 9V7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2a2 2 0 0 0 0 4v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a2 2 0 0 0 0-4zM14 6v12',
     text: 'M4 6h16M4 11h16M4 16h9',
     brush: 'M4 20c3 1 6-1 6-4 0-1.5-1-2.5-2.5-2.5S5 14.5 5 16c0 2-.5 3-1 4zM11 14L20 5l-2-2-9 9',
     sliders: 'M4 7h10M18 7h2M4 17h4M12 17h8M14 4v6M8 14v6',
