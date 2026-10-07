@@ -138,6 +138,52 @@ export default function Customers() {
 }
 
 /**
+ * A password for an account someone else will use.
+ *
+ * Two requirements pull against each other: it gets read down a phone, so
+ * it has to be dictatable; and it may never be changed, so it has to hold
+ * up on its own.
+ *
+ * Four groups of four from a 29-character alphabet is about 78 bits. That
+ * holds up even if the password is never rotated, which is the case worth
+ * designing for -- an admin-issued password often is not. Grouping keeps
+ * it dictatable, and the alphabet drops 0/O/1/I/L/S/5 because those are
+ * what get misheard and mistyped.
+ *
+ * crypto.getRandomValues, not Math.random: Math.random is not a CSPRNG and
+ * its internal state can be recovered from its own output. An earlier
+ * version of this picked one of six words and a four-digit number, which
+ * is 54,000 possibilities -- brute-forceable against a login endpoint in
+ * days.
+ */
+const PW_ALPHABET = '2346789ABCDEFGHJKMNPQRTUVWXYZ'   // 29 characters
+
+function suggestPassword() {
+  const need = 16
+  const out = []
+
+  // Rejection sampling. Taking a byte modulo 29 would make the first nine
+  // characters of the alphabet slightly likelier than the rest, which is a
+  // small bias but a free one to avoid.
+  const limit = 256 - (256 % PW_ALPHABET.length)
+  while (out.length < need) {
+    const bytes = new Uint8Array(need * 2)
+    crypto.getRandomValues(bytes)
+    for (const b of bytes) {
+      if (out.length === need) break
+      if (b < limit) out.push(PW_ALPHABET[b % PW_ALPHABET.length])
+    }
+  }
+
+  // Grouped for dictation, and a digit is guaranteed because the server
+  // asks for one.
+  const groups = [
+    out.slice(0, 4), out.slice(4, 8), out.slice(8, 12), out.slice(12, 16),
+  ].map((g) => g.join(''))
+  return `Zion-${groups.join('-')}`
+}
+
+/**
  * Creating an account by hand.
  *
  * The role is an explicit choice with customer preselected. An account
@@ -159,12 +205,7 @@ function NewAccount({ onClose, onDone }) {
   }
 
   const suggest = () => {
-    // Readable rather than maximally random: this gets read down a phone
-    // to the person it belongs to, who should change it afterwards.
-    const words = ['tea', 'leaf', 'bloom', 'root', 'petal', 'brew']
-    const w = words[Math.floor(Math.random() * words.length)]
-    const n = Math.floor(1000 + Math.random() * 9000)
-    setForm((f) => ({ ...f, password: `Zion-${w}-${n}` }))
+    setForm((f) => ({ ...f, password: suggestPassword() }))
   }
 
   const submit = async (e) => {
@@ -227,7 +268,8 @@ function NewAccount({ onClose, onDone }) {
                   <p className="mt-1.5 text-tiny text-[#8F3623]">{errors.password}</p>
                 ) : (
                   <p className="mt-1.5 text-tiny text-soft">
-                    At least 8 characters with a number. Pass it on and ask them to change it.
+                    At least 8 characters with a number. Suggest makes a strong one in groups,
+                    so it can be read out over the phone. Ask them to change it once they are in.
                   </p>
                 )}
               </div>
