@@ -1,13 +1,35 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Which backend `npm run dev` talks to. 5000 is a crowded port -- plenty
+// of other dev servers claim it -- and when something else is already
+// there the shop proxies to it and reports that stranger's 404s as its
+// own, which takes a surprisingly long time to see.
+//
+//   API_PORT=5004 npm run dev
+//
+const API_PORT = process.env.API_PORT || '5000'
+
 export default defineConfig({
   plugins: [react()],
 
   server: {
     port: 5173,
     proxy: {
-      '/api': { target: 'http://localhost:5000', changeOrigin: true },
+      '/api': {
+        target: `http://127.0.0.1:${API_PORT}`,
+        changeOrigin: true,
+        // Say so in the terminal instead of letting the browser show a
+        // bare 500 with nothing to search for.
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.error(
+              `\n  [api] cannot reach the backend on 127.0.0.1:${API_PORT} -- ${err.message}` +
+              `\n  Start it:  cd backend && PORT=${API_PORT} python app.py\n`
+            )
+          })
+        },
+      },
     },
   },
 
