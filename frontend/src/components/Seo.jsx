@@ -1,3 +1,4 @@
+import { SITE_URL } from '../lib/site'
 import { useEffect } from 'react'
 
 /**
@@ -64,7 +65,7 @@ export const faqSchema = (faqs) => ({
   })),
 })
 
-export const productSchema = (p, siteUrl = 'https://zionherbs.in') => ({
+export const productSchema = (p, siteUrl = SITE_URL) => ({
   '@context': 'https://schema.org',
   '@type': 'Product',
   name: `ZION ${p.name} Herbal Tea`,

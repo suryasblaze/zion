@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Seo from '../components/Seo'
+import { canonical } from '../lib/site'
 import { api } from '../lib/api'
 import { useAuth, useSettings } from '../context/StoreProvider'
 import { num } from '../lib/format'
@@ -50,7 +51,7 @@ export default function Refer() {
       <Seo
         title={`Refer a friend, earn ${coinName} — ZION Herbs`}
         description={`Share your ZION link. Your friend saves on their first order and you earn ${coinName} that come off your next one.`}
-        canonical="https://zionherbs.in/refer"
+        canonical={canonical('/refer')}
       />
 
       <header className="border-b border-line">

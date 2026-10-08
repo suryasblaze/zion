@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Seo, { faqSchema } from '../components/Seo'
+import { canonical } from '../lib/site'
 import ProductDetailPanel from '../components/ProductDetailPanel'
 import { TEAS, SETS, FAQS } from '../data/catalog'
 import { useCart, useSettings } from '../context/StoreProvider'
@@ -90,7 +91,7 @@ export default function Home() {
         title="ZION Herbs — Caffeine-Free Herbal Teas from Tamil Nadu"
         description="Six single-origin herbal infusions — butterfly pea, hibiscus, chamomile, lavender, nannari and aavaram poo. Whole flowers and roots, nothing added."
         image="/brand/range-poster-light.jpg"
-        canonical="https://zionherbs.in/"
+        canonical={canonical('/')}
         schema={faqSchema(FAQS.slice(0, 6))}
       />
 

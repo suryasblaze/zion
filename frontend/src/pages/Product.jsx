@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Seo, { productSchema, faqSchema } from '../components/Seo'
+import { canonical } from '../lib/site'
 import { bySlug, TEAS, FAQS } from '../data/catalog'
 import { useCart } from '../context/StoreProvider'
 import { accentStyle, inr, discountPct } from '../lib/format'
@@ -25,7 +26,7 @@ export default function Product() {
         title={`${product.name} Herbal Tea — Caffeine Free | ZION Herbs`}
         description={product.short}
         image={product.image}
-        canonical={`https://zionherbs.in/product/${product.slug}`}
+        canonical={canonical(`/product/${product.slug}`)}
         schema={productSchema(product)}
       />
 

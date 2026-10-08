@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Seo from '../components/Seo'
+import { canonical } from '../lib/site'
 import { TEAS, SETS } from '../data/catalog'
 import { useCart } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
@@ -39,7 +40,7 @@ export default function Shop() {
       <Seo
         title="Shop all herbal teas — ZION Herbs"
         description="Six caffeine-free single-origin infusions and two gift sets. Butterfly pea, hibiscus, chamomile, lavender, nannari and aavaram poo, hand-packed in Tamil Nadu."
-        canonical="https://zionherbs.in/shop"
+        canonical={canonical('/shop')}
       />
 
       <header className="border-b border-line">

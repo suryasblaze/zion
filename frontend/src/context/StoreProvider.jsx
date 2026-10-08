@@ -12,7 +12,7 @@ const FALLBACK_SETTINGS = {
   'store.tagline': 'Six Nature. One Wellness.',
   'store.phone': '+91 63840 13131',
   'store.whatsapp': '916384013131',
-  'store.email': 'hello@zionherbs.in',
+  'store.email': 'hello@zionherbs.com',
   'store.currency_symbol': '₹',
   'store.free_shipping_over': 999,
   'store.shipping_flat': 69,

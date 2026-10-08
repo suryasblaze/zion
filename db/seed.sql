@@ -121,7 +121,7 @@ values
 -- ---------- Store --------------------------------------------------
 ('store.name', '"ZION Herbs"', 'string', 'store', 'Store name', null, 'text', '[]', null, null, true, 1),
 ('store.tagline', '"Six Nature. One Wellness."', 'string', 'store', 'Tagline', null, 'text', '[]', null, null, true, 2),
-('store.email', '"hello@zionherbs.in"', 'string', 'store', 'Contact email', null, 'text', '[]', null, null, true, 3),
+('store.email', '"hello@zionherbs.com"', 'string', 'store', 'Contact email', null, 'text', '[]', null, null, true, 3),
 ('store.phone', '"+91 63840 13131"', 'string', 'store', 'Phone', null, 'text', '[]', null, null, true, 4),
 ('store.whatsapp', '"916384013131"', 'string', 'store', 'WhatsApp number',
  'Digits only, with country code. Powers the WhatsApp order button.', 'text', '[]', null, null, true, 5),
@@ -141,7 +141,7 @@ values
  'Announcement bar', 'Leave empty to hide the bar.', 'text', '[]', null, null, true, 14),
 
 -- ---------- SEO / AEO / GEO ----------------------------------------
-('seo.site_url', '"https://zionherbs.in"', 'string', 'seo', 'Canonical site URL', null, 'text', '[]', null, null, true, 1),
+('seo.site_url', '"https://zionherbs.com"', 'string', 'seo', 'Canonical site URL', null, 'text', '[]', null, null, true, 1),
 ('seo.default_title', '"ZION Herbs — Caffeine-Free Herbal Teas from Tamil Nadu"', 'string', 'seo',
  'Default page title', null, 'text', '[]', null, null, true, 2),
 ('seo.default_description',
@@ -214,7 +214,7 @@ insert into locations (name, kind, city, state, country, phone, whatsapp, email,
                        service_areas, is_primary, opening_hours)
 select 
  'ZION Herbs', 'hq', 'Chennai', 'Tamil Nadu', 'India',
- '+91 63840 13131', '916384013131', 'hello@zionherbs.in',
+ '+91 63840 13131', '916384013131', 'hello@zionherbs.com',
  '["Chennai","Coimbatore","Madurai","Tiruchirappalli","Salem","Erode","Tirunelveli","All India"]'::jsonb,
  true,
  '[{"day":"Monday","opens":"09:00","closes":"18:00"},

@@ -63,7 +63,7 @@ email = lambda who: f"{who}.{stamp}@example.test"
 # =====================================================================
 head("Setup: admin signs in")
 _, r = call("POST", "/auth/login",
-            {"email": "admin@zionherbs.in", "password": "ZionAdmin!2026"}, expect=200)
+            {"email": "admin@zionherbs.com", "password": "ZionAdmin!2026"}, expect=200)
 admin_token = r["data"]["access_token"]
 check("admin can sign in", bool(admin_token))
 

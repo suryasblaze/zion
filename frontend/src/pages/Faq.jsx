@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Seo, { faqSchema } from '../components/Seo'
+import { canonical } from '../lib/site'
 import { FAQS } from '../data/catalog'
 
 export default function Faq() {
@@ -16,7 +17,7 @@ export default function Faq() {
       <Seo
         title="Questions about ZION herbal teas"
         description="Caffeine, brewing times, what nannari and aavaram poo are, shipping across India, and how the referral programme works."
-        canonical="https://zionherbs.in/faq"
+        canonical={canonical('/faq')}
         schema={faqSchema(FAQS)}
       />
 

@@ -205,7 +205,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ```bash
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d zionherbs.in -d www.zionherbs.in
+sudo certbot --nginx -d zionherbs.com -d www.zionherbs.com
 sudo systemctl status certbot.timer     # renewal is automatic
 ```
 
@@ -291,10 +291,10 @@ Worth doing when traffic justifies it, roughly in order:
 ## Checking it afterwards
 
 ```bash
-curl -I  https://zionherbs.in                      # 200, HSTS present
-curl -s  https://zionherbs.in/api/health           # database: connected
-curl -s  https://zionherbs.in/llms.txt | head      # Flask, same origin
-curl -sI https://zionherbs.in/assets/ -o /dev/null # immutable cache header
+curl -I  https://zionherbs.com                      # 200, HSTS present
+curl -s  https://zionherbs.com/api/health           # database: connected
+curl -s  https://zionherbs.com/llms.txt | head      # Flask, same origin
+curl -sI https://zionherbs.com/assets/ -o /dev/null # immutable cache header
 
 sudo journalctl -u zion-api -f
 sudo tail -f /var/log/nginx/zion.access.log
@@ -311,7 +311,7 @@ delivery. Mark it paid and confirm the referral reward fires.
 common cause of "the site broke after deploying".
 
 **Razorpay's webhook needs the public URL**, not localhost:
-`https://zionherbs.in/api/payments/razorpay/webhook`. Without
+`https://zionherbs.com/api/payments/razorpay/webhook`. Without
 `RAZORPAY_WEBHOOK_SECRET` set, payments only confirm on the browser
 callback — so a customer who closes the tab mid-payment stays unpaid.
 

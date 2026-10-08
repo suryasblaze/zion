@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Seo from '../components/Seo'
+import { canonical } from '../lib/site'
 import { TEAS } from '../data/catalog'
 import { accentStyle } from '../lib/format'
 
@@ -9,7 +10,7 @@ export default function OurRoots() {
       <Seo
         title="Our roots — herbal tea from Tamil Nadu | ZION Herbs"
         description="Why ZION makes nannari, aavaram poo and four other single-origin infusions in Tamil Nadu, and what Siddha tradition has to do with it."
-        canonical="https://zionherbs.in/our-roots"
+        canonical={canonical('/our-roots')}
       />
 
       <header className="border-b border-line">

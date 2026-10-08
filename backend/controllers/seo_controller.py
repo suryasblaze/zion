@@ -9,6 +9,7 @@ cannot drift out of date.
 """
 from flask import Blueprint, Response
 
+from config import Config
 import db
 from services import settings_service
 
@@ -20,7 +21,15 @@ AI_CRAWLERS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-W
 
 
 def _site():
-    return settings_service.get_str("seo.site_url", "https://zionherbs.in").rstrip("/")
+    """
+    The domain the sitemap advertises.
+
+    The admin setting wins so the shop can be moved without a deploy, but
+    it falls back to PUBLIC_SITE_URL rather than a literal: a hardcoded
+    domain here outlives the move and quietly publishes a sitemap full of
+    URLs pointing at the old address.
+    """
+    return settings_service.get_str("seo.site_url", Config.PUBLIC_SITE_URL).rstrip("/")
 
 
 @bp.get("/sitemap.xml")

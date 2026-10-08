@@ -25,7 +25,7 @@ export default function Auth() {
   const next = new URLSearchParams(location.search).get('next') || '/account'
   const coinName = get('wallet.coin_name', 'ZION Coins')
   const whatsapp = get('store.whatsapp', '916384013131')
-  const storeEmail = get('store.email', 'hello@zionherbs.in')
+  const storeEmail = get('store.email', 'hello@zionherbs.com')
 
   useEffect(() => {
     if (user) navigate(next, { replace: true })

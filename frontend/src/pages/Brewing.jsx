@@ -1,4 +1,5 @@
 import Seo from '../components/Seo'
+import { canonical } from '../lib/site'
 import { TEAS } from '../data/catalog'
 import { accentStyle } from '../lib/format'
 
@@ -15,7 +16,7 @@ export default function Brewing() {
       <Seo
         title="How to brew each ZION herbal tea — temperature and steeping time"
         description="Water temperature and steeping time for butterfly pea, hibiscus, chamomile, lavender, nannari and aavaram poo, plus iced brewing notes."
-        canonical="https://zionherbs.in/brewing"
+        canonical={canonical('/brewing')}
       />
 
       <header className="border-b border-line">

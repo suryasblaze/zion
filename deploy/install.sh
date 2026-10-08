@@ -34,6 +34,18 @@ emit_nginx()   { cat "$ROOT/deploy/nginx.conf"; }
 have_config()  { [ -f "$ROOT/deploy/zion-api.service" ] && [ -f "$ROOT/deploy/nginx.conf" ]; }
 # ------------------------------------------------- config sources END
 
+# The domain lives in one place: PUBLIC_SITE_URL in backend/.env. nginx
+# needs the bare host for server_name and for the certificate paths, so
+# it is read back out rather than typed a second time -- a server_name
+# that disagrees with PUBLIC_SITE_URL gives a site that serves fine and
+# publishes a sitemap full of URLs for the wrong address.
+site_host() {
+  [ -f "$ROOT/backend/.env" ] || return 0
+  sed -n 's/^[[:space:]]*PUBLIC_SITE_URL[[:space:]]*=[[:space:]]*//p' "$ROOT/backend/.env" \
+    | tail -1 | tr -d '"'\''[:space:]' \
+    | sed -e 's|^https\{0,1\}://||' -e 's|/.*$||'
+}
+
 # ---------------------------------------------------------- what is here
 [ -d backend ] || die "No backend/ folder here. Run this from the folder you unpacked into."
 [ -d dist ]    || warn "No dist/ folder — the frontend will 404 until you copy the build in."
@@ -124,7 +136,13 @@ limit_req_zone $binary_remote_addr zone=zion_api:10m   rate=30r/m;
 limit_req_zone $binary_remote_addr zone=zion_auth:10m  rate=10r/m;
 limit_req_zone $binary_remote_addr zone=zion_write:10m rate=6r/m;
 LIMITS
-    emit_nginx | sudo tee /etc/nginx/sites-available/zion >/dev/null
+    HOST="$(site_host)"
+    if [ -n "$HOST" ] && [ "$HOST" != "zionherbs.com" ]; then
+      ok "using domain $HOST (from PUBLIC_SITE_URL)"
+      emit_nginx | sed "s/zionherbs\.com/$HOST/g" | sudo tee /etc/nginx/sites-available/zion >/dev/null
+    else
+      emit_nginx | sudo tee /etc/nginx/sites-available/zion >/dev/null
+    fi
     sudo ln -sf /etc/nginx/sites-available/zion /etc/nginx/sites-enabled/zion
     sudo rm -f /etc/nginx/sites-enabled/default
     if sudo nginx -t 2>/dev/null; then
