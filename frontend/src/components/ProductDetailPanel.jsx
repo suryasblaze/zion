@@ -27,10 +27,12 @@ export default function ProductDetailPanel({ product, onAdd, onClose, id }) {
     >
       <div className="grid gap-8 lg:grid-cols-[minmax(0,300px)_1fr]">
         {/* ------------------------------------------- image + buy */}
-        {/* Full width on a phone, where that reads well. Capped between
-            sm and lg, where a single-column panel would otherwise stretch
-            the cup across the whole tablet. */}
-        <div className="sm:max-w-[320px] lg:sticky lg:top-24 lg:max-w-none lg:self-start">
+        {/* Two columns only from lg up. Below that the panel stacks
+            directly under the card that opened it, and the card is
+            already showing this exact tile -- so the image here would be
+            the same picture twice in a row. The whole left column drops
+            out and the buy block reappears inside the right one. */}
+        <div className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
           <Link
             to={`/product/${product.slug}`}
             className="block overflow-hidden border border-line bg-paper"
@@ -43,31 +45,7 @@ export default function ProductDetailPanel({ product, onAdd, onClose, id }) {
             />
           </Link>
 
-          <div className="mt-4 border-t border-line pt-4">
-            <p className="nums flex items-baseline gap-2">
-              <span className="font-display text-[1.6rem]">{inr(product.price)}</span>
-              {product.mrp > product.price && (
-                <s className="text-tiny text-soft">{inr(product.mrp)}</s>
-              )}
-              <span className="text-tiny text-soft">{sizes[0]?.label}</span>
-            </p>
-
-            {sizes.length > 1 && (
-              <p className="nums mt-1 text-tiny text-soft">
-                also {sizes.slice(1).map((s) => `${s.label} ${inr(s.price)}`).join(' · ')}
-              </p>
-            )}
-
-            <button onClick={onAdd} className="btn btn-solid mt-4 w-full">
-              Add to bag
-            </button>
-            <Link
-              to={`/product/${product.slug}`}
-              className="mt-2 block text-center text-tiny text-soft underline underline-offset-4 hover:text-ink"
-            >
-              Open the full page
-            </Link>
-          </div>
+          <BuyBlock product={product} sizes={sizes} onAdd={onAdd} />
         </div>
 
         {/* ------------------------------------------- the accordion */}
@@ -79,6 +57,13 @@ export default function ProductDetailPanel({ product, onAdd, onClose, id }) {
             )}
             <p className="mt-2 max-w-[62ch] text-soft">{product.short}</p>
           </header>
+
+          {/* Stacked layouts only. Sits above the accordion on purpose:
+              buying should never be something you have to expand a row
+              to reach. */}
+          <div className="lg:hidden">
+            <BuyBlock product={product} sizes={sizes} onAdd={onAdd} />
+          </div>
 
           <div className="mt-5 border-t border-line">
             {sections.map((s) => {
@@ -130,6 +115,39 @@ export default function ProductDetailPanel({ product, onAdd, onClose, id }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Price, sizes and Add to bag. Rendered once per panel -- in the left
+ * column at lg, inside the right one below that -- so the two layouts
+ * cannot drift apart.
+ */
+function BuyBlock({ product, sizes, onAdd }) {
+  return (
+    <div className="mt-4 border-t border-line pt-4">
+      <p className="nums flex items-baseline gap-2">
+        <span className="font-display text-[1.6rem]">{inr(product.price)}</span>
+        {product.mrp > product.price && <s className="text-tiny text-soft">{inr(product.mrp)}</s>}
+        <span className="text-tiny text-soft">{sizes[0]?.label}</span>
+      </p>
+
+      {sizes.length > 1 && (
+        <p className="nums mt-1 text-tiny text-soft">
+          also {sizes.slice(1).map((s) => `${s.label} ${inr(s.price)}`).join(' · ')}
+        </p>
+      )}
+
+      <button onClick={onAdd} className="btn btn-solid mt-4 w-full sm:w-auto sm:px-12 lg:w-full">
+        Add to bag
+      </button>
+      <Link
+        to={`/product/${product.slug}`}
+        className="mt-3 block text-tiny text-soft underline underline-offset-4 hover:text-ink lg:mt-2 lg:text-center"
+      >
+        Open the full page
+      </Link>
     </div>
   )
 }
