@@ -33,7 +33,7 @@ npm run build
 # ------------------------------------------------------------- stage
 say "Assembling $stage"
 rm -rf "$stage"
-mkdir -p "$stage/deploy"
+mkdir -p "$stage"
 
 cp -r "$root/frontend/dist" "$stage/dist"
 
@@ -46,12 +46,45 @@ tar -c -C "$root" \
     --exclude='backend/render.yaml' \
     backend | tar -x -C "$stage"
 
-cp "$root/deploy/deploy.sh" "$root/deploy/nginx.conf" \
-   "$root/deploy/zion-api.service" "$stage/deploy/"
-cp "$root/deploy/install.sh" "$stage/install.sh"
+# install.sh, with the nginx site and the systemd unit inlined in place
+# of the block that reads deploy/. The server keeps dist/ and backend/
+# and nothing else: those two files belong in /etc once installed, and a
+# second copy sitting in the web root only invites editing the one that
+# is not live. deploy.sh is left out too -- it does `git pull` and builds
+# in frontend/, neither of which exists in an uploaded tarball.
+awk -v svc="$root/deploy/zion-api.service" -v ngx="$root/deploy/nginx.conf" '
+  /^# -+ config sources BEGIN$/ { skip = 1
+    print "# --------------------------------- config sources (inlined)"
+    print "# Written by deploy/package.sh from deploy/zion-api.service"
+    print "# and deploy/nginx.conf. Edit those, not this."
+    print "emit_service() { cat <<'\''ZION_SERVICE_EOF'\''"
+    while ((getline line < svc) > 0) print line
+    print "ZION_SERVICE_EOF"
+    print "}"
+    print "emit_nginx() { cat <<'\''ZION_NGINX_EOF'\''"
+    while ((getline line < ngx) > 0) print line
+    print "ZION_NGINX_EOF"
+    print "}"
+    print "have_config() { :; }"
+    next
+  }
+  /^# -+ config sources END$/ { skip = 0; next }
+  !skip
+' "$root/deploy/install.sh" > "$stage/install.sh"
+
 cp "$root/docs/production.md" "$stage/README-DEPLOY.md"
 
-chmod +x "$stage/install.sh" "$stage/deploy/deploy.sh" 2>/dev/null || true
+# A delimiter colliding with a line of config would truncate the script
+# silently, and the first anyone would know is a half-written nginx site.
+for d in ZION_SERVICE_EOF ZION_NGINX_EOF; do
+  if grep -qx "$d" "$root/deploy/zion-api.service" "$root/deploy/nginx.conf"; then
+    echo "refusing to package: '$d' appears in a config file" >&2
+    exit 1
+  fi
+done
+bash -n "$stage/install.sh" || { echo "generated install.sh is not valid shell" >&2; exit 1; }
+
+chmod +x "$stage/install.sh" 2>/dev/null || true
 
 # A tarball that carried a .env would hand over the database. Cheap to
 # check, and the one mistake here that cannot be taken back.

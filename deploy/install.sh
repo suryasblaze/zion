@@ -23,6 +23,17 @@ ok()   { printf '  \033[32mok\033[0m  %s\n' "$*"; }
 warn() { printf '  \033[33m--\033[0m  %s\n' "$*"; }
 die()  { printf '\n\033[31m%s\033[0m\n\n' "$*"; exit 1; }
 
+# ----------------------------------------------- config sources BEGIN
+# The nginx site and the systemd unit belong in /etc, not in the web
+# root. Run from a clone these read deploy/; deploy/package.sh rewrites
+# this one block with the two files inlined, so the uploaded tarball is
+# just dist/ and backend/ and carries no deploy/ folder to leave behind.
+# Single source of truth either way: the files in deploy/.
+emit_service() { cat "$ROOT/deploy/zion-api.service"; }
+emit_nginx()   { cat "$ROOT/deploy/nginx.conf"; }
+have_config()  { [ -f "$ROOT/deploy/zion-api.service" ] && [ -f "$ROOT/deploy/nginx.conf" ]; }
+# ------------------------------------------------- config sources END
+
 # ---------------------------------------------------------- what is here
 [ -d backend ] || die "No backend/ folder here. Run this from the folder you unpacked into."
 [ -d dist ]    || warn "No dist/ folder — the frontend will 404 until you copy the build in."
@@ -96,24 +107,24 @@ say "Admin account"
 # -------------------------------------------------------- system files
 if [ "$(id -u)" = 0 ] || sudo -n true 2>/dev/null; then
   say "systemd service"
-  if [ -f deploy/zion-api.service ]; then
-    sudo cp deploy/zion-api.service /etc/systemd/system/zion-api.service
+  if have_config; then
+    emit_service | sudo tee /etc/systemd/system/zion-api.service >/dev/null
     sudo systemctl daemon-reload
     sudo systemctl enable zion-api >/dev/null 2>&1 || true
     sudo systemctl restart zion-api
     ok "zion-api installed and started"
   else
-    warn "deploy/zion-api.service not found — skipping"
+    warn "no service definition in this package — skipping"
   fi
 
   say "nginx"
-  if [ -f deploy/nginx.conf ] && command -v nginx >/dev/null; then
+  if have_config && command -v nginx >/dev/null; then
     sudo tee /etc/nginx/conf.d/zion-limits.conf >/dev/null <<'LIMITS'
 limit_req_zone $binary_remote_addr zone=zion_api:10m   rate=30r/m;
 limit_req_zone $binary_remote_addr zone=zion_auth:10m  rate=10r/m;
 limit_req_zone $binary_remote_addr zone=zion_write:10m rate=6r/m;
 LIMITS
-    sudo cp deploy/nginx.conf /etc/nginx/sites-available/zion
+    emit_nginx | sudo tee /etc/nginx/sites-available/zion >/dev/null
     sudo ln -sf /etc/nginx/sites-available/zion /etc/nginx/sites-enabled/zion
     sudo rm -f /etc/nginx/sites-enabled/default
     if sudo nginx -t 2>/dev/null; then
@@ -124,12 +135,11 @@ LIMITS
       warn "  sudo certbot --nginx -d yourdomain.com"
     fi
   else
-    warn "nginx not installed, or deploy/nginx.conf missing — skipping"
+    warn "nginx not installed, or no site config in this package — skipping"
   fi
 else
-  warn "No sudo — skipped systemd and nginx. Run those steps as root:"
-  warn "  sudo cp deploy/zion-api.service /etc/systemd/system/ && sudo systemctl enable --now zion-api"
-  warn "  sudo cp deploy/nginx.conf /etc/nginx/sites-available/zion"
+  warn "No sudo — skipped systemd and nginx. Re-run this as root, or:"
+  warn "  sudo ./install.sh"
 fi
 
 # ------------------------------------------------------------- verify

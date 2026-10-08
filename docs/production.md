@@ -70,8 +70,14 @@ python3 -m venv venv
 /var/www/zion/
 ├── dist/        the built frontend (~8 MB)
 ├── backend/     the API
-└── venv/        created on the server, never copied
+├── venv/        created on the server, never copied
+└── install.sh   from the package; safe to re-run
 ```
+
+`deploy/` is **not** required either. The nginx site and the systemd unit
+belong in `/etc`, and `install.sh` writes them there from copies inlined
+into itself. A second copy under the web root would only be a file you
+can edit without anything changing.
 
 `db/` is **not** required. Only `seed.py` reads it, and only when
 migrating or seeding — which you do once, from wherever the schema is
@@ -145,12 +151,20 @@ change that line, or you get a 403 and a blank page.
 
 ## 6. The API as a service
 
+`install.sh` already wrote this unit and started it. By hand, from a
+clone:
+
 ```bash
 sudo cp deploy/zion-api.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now zion-api
 sudo systemctl status zion-api
 ```
+
+From an uploaded package there is no `deploy/` folder — the unit is
+inlined in `install.sh` and written straight to `/etc`, which is the only
+place it should exist. Edit `/etc/systemd/system/zion-api.service` and
+`daemon-reload` to change it.
 
 Gunicorn binds `127.0.0.1:5000` — loopback only, so nothing but nginx can
 reach it.
@@ -162,11 +176,18 @@ Raising workers to 8 without lowering the pool is how you exhaust it.
 
 ## 7. nginx
 
+Also done by `install.sh`, including the rate-limit zones below. By hand,
+from a clone:
+
 ```bash
 sudo cp deploy/nginx.conf /etc/nginx/sites-available/zion
 sudo ln -s /etc/nginx/sites-available/zion /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 ```
+
+The live site file is `/etc/nginx/sites-available/zion`. Edit that one —
+after an upload install there is no second copy under `/var/www/zion` to
+edit by mistake.
 
 The rate-limit zones live in `http{}`, not the server block:
 
@@ -221,6 +242,24 @@ Pulls, installs, checks the configuration, migrates, builds the frontend
 **aside** and swaps it in, restarts the API, and waits for the health
 check. If the API does not come back it restores the previous frontend
 and stops. A failed build never leaves a half-replaced site.
+
+**If you upload the package:** build it on your machine with
+`bash deploy/package.sh`, then
+
+```bash
+scp build-out/zion-production.tar.gz zion@server:/tmp/
+ssh zion@server
+cd /var/www/zion && tar xzf /tmp/zion-production.tar.gz --strip-components=1
+./install.sh
+```
+
+`install.sh` is safe to re-run: it reuses the venv, keeps your `.env`,
+reinstalls dependencies, rewrites the nginx site and the systemd unit,
+restarts the API and waits for the health check.
+
+`deploy.sh` is **not** in the package, and would not work there — it does
+`git pull` and builds in `frontend/`, and an uploaded tree has neither.
+Re-running `install.sh` is the upload equivalent.
 
 ---
 
