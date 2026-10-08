@@ -46,6 +46,27 @@ site_host() {
     | sed -e 's|^https\{0,1\}://||' -e 's|/.*$||'
 }
 
+# The unit and the nginx site are written for /var/www/zion. Unpack
+# anywhere else -- /var/www/html/zion is a common one -- and every one of
+# those paths points at a directory that does not exist, which systemd
+# reports as a bare status=200/CHDIR with nothing to search for. The
+# install location is known here, so it is substituted rather than
+# assumed.
+APP_DIR_DEFAULT="/var/www/zion"
+
+# Who the service runs as. The unit says `zion`; honour whoever actually
+# owns the files instead, because a service that cannot read its own
+# .env fails in a way the logs describe only as a config error.
+app_user() {
+  local u
+  u="$(stat -c '%U' "$ROOT" 2>/dev/null || true)"
+  if [ -n "$u" ] && [ "$u" != "root" ] && [ "$u" != "UNKNOWN" ]; then printf '%s' "$u"; return; fi
+  if id -u zion >/dev/null 2>&1; then printf 'zion'; return; fi
+  printf 'www-data'
+}
+
+retarget() { sed -e "s|$APP_DIR_DEFAULT|$ROOT|g" -e "s|^User=zion\$|User=$APP_USER|" -e "s|^Group=zion\$|Group=$APP_USER|"; }
+
 # ---------------------------------------------------------- what is here
 [ -d backend ] || die "No backend/ folder here. Run this from the folder you unpacked into."
 [ -d dist ]    || warn "No dist/ folder — the frontend will 404 until you copy the build in."
@@ -119,8 +140,25 @@ say "Admin account"
 # -------------------------------------------------------- system files
 if [ "$(id -u)" = 0 ] || sudo -n true 2>/dev/null; then
   say "systemd service"
+  APP_USER="$(app_user)"
+  if ! id -u "$APP_USER" >/dev/null 2>&1; then
+    die "The user '$APP_USER' does not exist. Create it, then run this again:
+    sudo adduser --system --group --home $ROOT zion
+    sudo chown -R zion:zion $ROOT"
+  fi
+  [ "$ROOT" = "$APP_DIR_DEFAULT" ] || ok "installing for $ROOT (not the default $APP_DIR_DEFAULT)"
+  ok "service will run as $APP_USER"
+
+  # root-owned files plus a 600 .env means the service user cannot read
+  # its own configuration. Fix it here rather than leaving a startup
+  # failure that reads like a bad DATABASE_URL.
+  if [ "$(id -u)" = 0 ] && [ "$APP_USER" != "root" ]; then
+    chown -R "$APP_USER" "$ROOT/backend" 2>/dev/null || true
+    chmod 600 "$ROOT/backend/.env" 2>/dev/null || true
+  fi
+
   if have_config; then
-    emit_service | sudo tee /etc/systemd/system/zion-api.service >/dev/null
+    emit_service | retarget | sudo tee /etc/systemd/system/zion-api.service >/dev/null
     sudo systemctl daemon-reload
     sudo systemctl enable zion-api >/dev/null 2>&1 || true
     sudo systemctl restart zion-api
@@ -139,9 +177,10 @@ LIMITS
     HOST="$(site_host)"
     if [ -n "$HOST" ] && [ "$HOST" != "zionherbs.com" ]; then
       ok "using domain $HOST (from PUBLIC_SITE_URL)"
-      emit_nginx | sed "s/zionherbs\.com/$HOST/g" | sudo tee /etc/nginx/sites-available/zion >/dev/null
+      emit_nginx | retarget | sed "s/zionherbs\.com/$HOST/g" \
+        | sudo tee /etc/nginx/sites-available/zion >/dev/null
     else
-      emit_nginx | sudo tee /etc/nginx/sites-available/zion >/dev/null
+      emit_nginx | retarget | sudo tee /etc/nginx/sites-available/zion >/dev/null
     fi
     sudo ln -sf /etc/nginx/sites-available/zion /etc/nginx/sites-enabled/zion
     sudo rm -f /etc/nginx/sites-enabled/default
@@ -162,26 +201,44 @@ fi
 
 # ------------------------------------------------------------- verify
 say "Checking the API answers"
-up=0
+HEALTH=""
 for _ in $(seq 1 20); do
-  if curl -fsS --max-time 3 http://127.0.0.1:5000/api/health >/dev/null 2>&1; then up=1; break; fi
+  HEALTH="$(curl -fsS --max-time 3 http://127.0.0.1:5000/api/health 2>/dev/null || true)"
+  [ -n "$HEALTH" ] && break
   sleep 1
 done
 
-if [ "$up" = 1 ]; then
-  ok "API is up: $(curl -s http://127.0.0.1:5000/api/health)"
-else
-  warn "The API did not answer on 127.0.0.1:5000"
-  warn "  sudo journalctl -u zion-api -n 40 --no-pager"
-fi
+# A 200 on port 5000 is not proof that it is *this* API. Any other app
+# already bound there answers too, and reporting that as success sends
+# you away believing the shop is up when nothing of it is running. Our
+# health payload names the database; nothing else's does.
+case "$HEALTH" in
+  "")
+    warn "The API did not answer on 127.0.0.1:5000"
+    warn "  sudo journalctl -u zion-api -n 40 --no-pager"
+    ;;
+  *'"database"'*)
+    ok "API is up: $HEALTH"
+    ;;
+  *)
+    warn "Port 5000 is answering, but it is NOT this API."
+    warn "  it replied: $HEALTH"
+    warn "Another service already holds the port. Find it with:"
+    warn "  sudo ss -ltnp 'sport = :5000'"
+    warn "Then stop it, or move ZION to a free port: change --bind in"
+    warn "  /etc/systemd/system/zion-api.service"
+    warn "and proxy_pass in /etc/nginx/sites-available/zion to match."
+    ;;
+esac
 
 say "Done"
-cat <<'NEXT'
+DOMAIN="$(site_host)"; DOMAIN="${DOMAIN:-yourdomain.com}"
+cat <<NEXT
   Next:
-    HTTPS      sudo certbot --nginx -d yourdomain.com
+    HTTPS      sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN
     daily job  crontab -e
-               0 3 * * * cd /var/www/zion/backend && /var/www/zion/venv/bin/python maintenance.py >> /var/log/zion-maintenance.log 2>&1
+               0 3 * * * cd $ROOT/backend && $ROOT/venv/bin/python maintenance.py >> /var/log/zion-maintenance.log 2>&1
     logs       sudo journalctl -u zion-api -f
 
-  Then sign in at https://yourdomain.com/signin and open /admin.
+  Then sign in at https://$DOMAIN/signin and open /admin.
 NEXT
