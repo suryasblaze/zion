@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart, useSettings } from '../context/StoreProvider'
 import { inr } from '../lib/format'
+import Img from './Img'
 
 export default function CartDrawer() {
   const { lines, open, setOpen, setQty, remove, subtotal, count } = useCart()
@@ -70,7 +71,7 @@ export default function CartDrawer() {
                     className="h-[86px] w-[66px] shrink-0 overflow-hidden bg-surface"
                     style={{ borderLeft: `2px solid ${l.accent || '#8F7222'}` }}
                   >
-                    <img src={l.image} alt="" className="h-full w-full object-cover" />
+                    <Img src={l.image} alt="" className="h-full w-full object-cover" />
                   </div>
 
                   <div className="flex flex-1 flex-col">

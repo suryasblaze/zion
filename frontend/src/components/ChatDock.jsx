@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { TEAS, FAQS } from '../data/catalog'
 import { useCart, useSettings } from '../context/StoreProvider'
 import { inr } from '../lib/format'
+import Img from './Img'
 
 /**
  * The side dock: a tea guide and a WhatsApp handoff.
@@ -235,7 +236,7 @@ export default function ChatDock() {
                            : 'pointer-events-none translate-y-3 scale-95 opacity-0'}`}
       >
         <header className="flex items-center gap-3 border-b border-line bg-surface px-4 py-3.5">
-          <img src="/brand/logo-dark.png" alt="" className="h-8 w-auto" />
+          <Img src="/brand/logo-dark.png" alt="" className="h-8 w-auto" />
           <div className="mr-auto">
             <p className="font-display text-[1.02rem] leading-tight">Tea guide</p>
             <p className="flex items-center gap-1.5 text-micro text-soft">
@@ -411,7 +412,7 @@ function Message({ m, waHref, onClose }) {
                   className="flex items-center gap-2 border border-line bg-paper p-1.5 pr-3
                              transition-colors hover:border-gold"
                 >
-                  {t && <img src={t.tile} alt="" className="h-9 w-9 object-cover" />}
+                  {t && <Img src={t.tile} alt="" className="h-9 w-9 object-cover" />}
                   <span className="text-tiny">
                     {t ? t.name : 'Discovery box'}
                     {t && <span className="nums block text-micro text-soft">{inr(t.price)}</span>}

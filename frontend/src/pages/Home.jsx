@@ -6,6 +6,7 @@ import ProductDetailPanel from '../components/ProductDetailPanel'
 import { TEAS, SETS, FAQS } from '../data/catalog'
 import { useCart, useSettings } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
+import Img, { preloadSrc } from '../components/Img'
 
 const SLIDE_MS = 5000
 
@@ -72,7 +73,10 @@ export default function Home() {
   useEffect(() => {
     TEAS.forEach((t) => {
       const img = new Image()
-      img.src = t.image
+      // Must ask for the same file <picture> will choose. Preloading the
+      // JPEG while the markup renders the WebP downloads every hero
+      // twice and warms a cache entry nothing goes on to read.
+      img.src = preloadSrc(t.image)
     })
   }, [])
 
@@ -151,14 +155,14 @@ export default function Home() {
               style={{ background: 'rgb(var(--c-accent) / 0.07)' }}
             />
             <div className="relative border border-line bg-paper p-3">
-              <img
+              <Img
                 key={tea.slug}
                 src={tea.image}
                 alt={`ZION ${tea.name} herbal tea`}
                 width="1100"
                 height="1650"
                 className="w-full animate-rise"
-                loading="eager"
+                priority
               />
 
               {/* Deliberately faint. The hero moves on its own; these are
@@ -276,7 +280,7 @@ export default function Home() {
               {[TEAS[4], TEAS[5]].map((t) => (
                 <figure key={t.slug} className="m-0" style={accentStyle(t)}>
                   <Link to={`/product/${t.slug}`}>
-                    <img
+                    <Img
                       src={t.image}
                       alt={`ZION ${t.name}`}
                       className="border border-line"
@@ -293,7 +297,7 @@ export default function Home() {
           </div>
 
           <figure className="m-0">
-            <img
+            <Img
               src="/products/lavender-tin.jpg"
               alt="The ZION lavender herbal infusion tin"
               className="border border-line"
@@ -399,7 +403,7 @@ function ProductCard({ product, onAdd, open, onToggle }) {
       <span className="absolute left-0 top-6 bottom-6 w-[2px] bg-accent" />
 
       <Link to={`/product/${product.slug}`} className="block overflow-hidden bg-surface">
-        <img
+        <Img
           src={product.tile || product.image}
           alt={`ZION ${product.name}`}
           className="aspect-square w-full object-cover transition-transform duration-700 ease-ease group-hover:scale-[1.04]"

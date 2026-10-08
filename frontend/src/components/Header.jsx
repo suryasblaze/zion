@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useAuth, useCart, useSettings } from '../context/StoreProvider'
+import Img from './Img'
 
 const LINKS = [
   { to: '/shop', label: 'Shop' },
@@ -41,7 +42,7 @@ export default function Header() {
       >
         <div className="shell flex h-[74px] items-center gap-9">
           <Link to="/" className="mr-auto flex items-center gap-2.5" aria-label="ZION Herbs, home">
-            <img src="/brand/logo-dark.png" alt="" className="h-9 w-auto" />
+            <Img src="/brand/logo-dark.png" alt="" className="h-9 w-auto" />
             <span className="font-display text-[1.25rem] tracking-[0.22em]">ZION</span>
           </Link>
 
@@ -62,12 +63,60 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-4 text-[0.9rem]">
-            <Link
-              to={user ? '/account' : '/signin'}
-              className="hidden sm:inline text-soft hover:text-ink transition-colors"
-            >
-              {user ? user.full_name?.split(' ')[0] || 'Account' : 'Sign in'}
-            </Link>
+            {/* Signed out this is a filled gold button: it was grey text
+                beside an outlined Bag, which read as a label rather than
+                something to press. Signed in it steps back to an outline
+                with the initial, because the shop, not the account, is
+                what someone is here for. */}
+            {/* Staff have no other way in. Without this the panel is a
+                URL you have to remember and type. */}
+            {(user?.role === 'admin' || user?.role === 'staff') && (
+              <Link
+                to="/admin"
+                className="hidden items-center gap-1.5 text-soft transition-colors hover:text-gold sm:inline-flex"
+              >
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.6" aria-hidden="true"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                Admin
+              </Link>
+            )}
+
+            {user ? (
+              <Link
+                to="/account"
+                className="hidden items-center gap-2 rounded border border-line py-1.5 pl-1.5 pr-3.5
+                           transition-colors hover:border-gold hover:text-gold sm:inline-flex"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full bg-gold text-[0.72rem] text-paper">
+                  {(user.full_name || 'A').trim().charAt(0).toUpperCase()}
+                </span>
+                {user.full_name?.split(' ')[0] || 'Account'}
+              </Link>
+            ) : (
+              <Link
+                to="/signin"
+                className="group hidden items-center gap-2 rounded bg-gold px-5 py-2.5 text-paper
+                           shadow-[0_1px_0_rgba(0,0,0,0.06)] transition-all duration-300
+                           hover:brightness-110 hover:shadow-[0_3px_14px_rgba(200,164,77,0.45)]
+                           sm:inline-flex"
+              >
+                <svg
+                  width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.7" aria-hidden="true"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Sign in
+              </Link>
+            )}
 
             <button
               onClick={() => setOpen(true)}
@@ -102,6 +151,23 @@ export default function Header() {
                   {l.label}
                 </NavLink>
               ))}
+
+              {/* The desktop button is hidden below sm, so without this
+                  there is no way to sign in from a phone at all. */}
+              <Link
+                to={user ? '/account' : '/signin'}
+                onClick={() => setMenu(false)}
+                className="mt-3 flex items-center justify-center gap-2 rounded bg-gold px-5 py-3 text-paper"
+              >
+                <svg
+                  width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="1.7" aria-hidden="true"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {user ? user.full_name?.split(' ')[0] || 'My account' : 'Sign in'}
+              </Link>
             </div>
           </nav>
         )}

@@ -4,6 +4,7 @@ import Seo from '../components/Seo'
 import { api } from '../lib/api'
 import { TEAS } from '../data/catalog'
 import { accentStyle } from '../lib/format'
+import Img from '../components/Img'
 
 /**
  * Event sampling form.
@@ -174,7 +175,7 @@ export default function EventSignup() {
 
               <div className="mt-5 border-t border-line pt-5">
                 {chosen && (
-                  <img
+                  <Img
                     src={`/products/${chosen.slug}-tile.jpg`}
                     alt={`ZION ${done.product_name}`}
                     className="mx-auto mb-3 h-28 w-28 border border-line object-cover"
@@ -345,7 +346,7 @@ export default function EventSignup() {
                       }}
                       className="sr-only"
                     />
-                    <img
+                    <Img
                       src={`/products/${p.slug}-tile.jpg`}
                       alt=""
                       className="mx-auto aspect-square w-full object-cover"
@@ -401,7 +402,7 @@ function EventShell({ children }) {
   return (
     <div className="flex min-h-screen flex-col bg-paper">
       <header className="flex justify-center px-6 pb-2 pt-10 sm:pt-14">
-        <img
+        <Img
           src="/brand/logo-dark.png"
           alt="ZION Herbs"
           width="720"

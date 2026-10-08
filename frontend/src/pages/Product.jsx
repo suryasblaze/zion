@@ -6,6 +6,7 @@ import { bySlug, TEAS, FAQS } from '../data/catalog'
 import { useCart } from '../context/StoreProvider'
 import { accentStyle, inr, discountPct } from '../lib/format'
 import NotFound from './NotFound'
+import Img from '../components/Img'
 
 export default function Product() {
   const { slug } = useParams()
@@ -42,7 +43,7 @@ export default function Product() {
         <figure className="relative m-0">
           <div className="absolute -inset-3 -z-10" style={{ background: 'rgb(var(--c-accent) / 0.07)' }} />
           <div className="border border-line bg-paper p-3">
-            <img src={product.image} alt={`ZION ${product.name} herbal tea`} className="w-full" />
+            <Img src={product.image} alt={`ZION ${product.name} herbal tea`} className="w-full" />
           </div>
         </figure>
 
@@ -163,7 +164,7 @@ export default function Product() {
               >
                 <span className="absolute left-0 top-6 bottom-6 w-[2px] bg-accent" />
                 <div className="overflow-hidden bg-surface">
-                  <img
+                  <Img
                     src={t.tile || t.image}
                     alt={`ZION ${t.name}`}
                     className="aspect-square w-full object-cover transition-transform duration-700 ease-ease group-hover:scale-[1.04]"

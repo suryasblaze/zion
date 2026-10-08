@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { accentStyle, inr } from '../lib/format'
+import Img from './Img'
 
 /**
  * The expanded product panel on the home page.
@@ -37,7 +38,7 @@ export default function ProductDetailPanel({ product, onAdd, onClose, id }) {
             to={`/product/${product.slug}`}
             className="block overflow-hidden border border-line bg-paper"
           >
-            <img
+            <Img
               src={product.tile || product.image}
               alt={`ZION ${product.name}`}
               className="aspect-square w-full object-cover"

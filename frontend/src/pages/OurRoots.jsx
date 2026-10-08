@@ -3,6 +3,7 @@ import Seo from '../components/Seo'
 import { canonical } from '../lib/site'
 import { TEAS } from '../data/catalog'
 import { accentStyle } from '../lib/format'
+import Img from '../components/Img'
 
 export default function OurRoots() {
   return (
@@ -47,7 +48,7 @@ export default function OurRoots() {
           </div>
 
           <figure className="m-0">
-            <img
+            <Img
               src="/brand/range-poster-light.jpg"
               alt="The six ZION herbal teas"
               className="border border-line"

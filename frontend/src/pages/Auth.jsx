@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Seo from '../components/Seo'
 import { useAuth, useSettings } from '../context/StoreProvider'
+import Img from '../components/Img'
 
 /**
  * Sign in.
@@ -22,7 +23,14 @@ export default function Auth() {
   const [busy, setBusy] = useState(false)
   const [show, setShow] = useState(false)
 
-  const next = new URLSearchParams(location.search).get('next') || '/account'
+  // Where to land after signing in. An explicit ?next= always wins --
+  // it is how a guarded page sends you here and gets you back. Failing
+  // that, staff go to the panel they came to use: sending an admin to
+  // the customer account page means every sign-in ends with them
+  // typing /admin into the address bar.
+  const explicitNext = new URLSearchParams(location.search).get('next')
+  const homeFor = (u) => (u && (u.role === 'admin' || u.role === 'staff') ? '/admin' : '/account')
+  const next = explicitNext || homeFor(user)
   const coinName = get('wallet.coin_name', 'ZION Coins')
   const whatsapp = get('store.whatsapp', '916384013131')
   const storeEmail = get('store.email', 'hello@zionherbs.com')
@@ -53,8 +61,8 @@ export default function Auth() {
     setErrors({})
     setNotice(null)
     try {
-      await login(form.email, form.password)
-      navigate(next, { replace: true })
+      const signedIn = await login(form.email, form.password)
+      navigate(explicitNext || homeFor(signedIn), { replace: true })
     } catch (err) {
       setErrors(err.payload?.errors || {})
       setNotice(err.message || 'Something went wrong. Try again.')
@@ -208,7 +216,7 @@ export default function Auth() {
           </ul>
 
           <figure className="m-0 mt-10">
-            <img
+            <Img
               src="/products/set-six-tile.jpg"
               alt="The six ZION herbal infusions"
               className="border border-line"

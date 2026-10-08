@@ -5,6 +5,7 @@ import { canonical } from '../lib/site'
 import { TEAS, SETS } from '../data/catalog'
 import { useCart } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
+import Img from '../components/Img'
 
 const FILTERS = [
   { key: 'all', label: 'Everything' },
@@ -112,7 +113,7 @@ export default function Shop() {
                   <span className="absolute left-0 top-7 bottom-7 w-[2px] bg-accent" />
 
                   <Link to={`/product/${p.slug}`} className="overflow-hidden bg-surface">
-                    <img
+                    <Img
                       src={p.tile || p.image}
                       alt={`ZION ${p.name}`}
                       className="aspect-square w-full object-cover transition-transform duration-700 ease-ease group-hover:scale-[1.04]"

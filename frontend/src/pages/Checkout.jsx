@@ -5,6 +5,7 @@ import { api } from '../lib/api'
 import { payWithRazorpay } from '../lib/razorpay'
 import { useAuth, useCart, useSettings } from '../context/StoreProvider'
 import { inr, num } from '../lib/format'
+import Img from '../components/Img'
 
 const BLANK_ADDRESS = {
   full_name: '', phone: '', line1: '', line2: '',
@@ -297,7 +298,7 @@ export default function Checkout() {
                 <div key={l.sku} className="flex gap-4 border-b border-line py-4 last:border-0">
                   <div className="h-16 w-16 shrink-0 overflow-hidden bg-surface"
                        style={{ borderLeft: `2px solid ${l.accent || '#8F7222'}` }}>
-                    <img src={l.image} alt="" className="h-full w-full object-cover" />
+                    <Img src={l.image} alt="" className="h-full w-full object-cover" />
                   </div>
                   <div className="flex-1">
                     <p className="text-[0.95rem]">{l.name}</p>

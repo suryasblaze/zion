@@ -4,6 +4,7 @@ import Seo from '../components/Seo'
 import { api } from '../lib/api'
 import { useAuth, useSettings } from '../context/StoreProvider'
 import { inr, num } from '../lib/format'
+import Img from '../components/Img'
 
 const TABS = ['Orders', 'Wallet', 'Referrals', 'Details']
 
@@ -120,7 +121,7 @@ function Orders({ orders }) {
           <div className="mt-5 flex flex-wrap gap-3">
             {(o.items || []).map((i, idx) => (
               <span key={idx} className="flex items-center gap-2 border border-line p-1.5 pr-3">
-                {i.image && <img src={i.image} alt="" className="h-9 w-9 object-cover" />}
+                {i.image && <Img src={i.image} alt="" className="h-9 w-9 object-cover" />}
                 <span className="text-tiny">
                   {i.name}
                   <span className="nums block text-micro text-soft">

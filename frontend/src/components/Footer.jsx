@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSettings } from '../context/StoreProvider'
+import Img from './Img'
 
 const COLUMNS = [
   {
@@ -52,7 +53,7 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div>
             <div className="flex items-center gap-2.5">
-              <img src="/brand/logo-dark.png" alt="" className="h-11 w-auto" />
+              <Img src="/brand/logo-dark.png" alt="" className="h-11 w-auto" />
               <span className="font-display text-[1.35rem] tracking-[0.22em]">ZION</span>
             </div>
             <p className="mt-4 max-w-[32ch] text-soft">
