@@ -32,6 +32,7 @@ const Coupons = lazy(() => import('./admin/Content').then((m) => ({ default: m.C
 const AdminSettings = lazy(() => import('./admin/Settings'))
 const DesignStudio = lazy(() => import('./admin/DesignStudio'))
 const AdminEventSignups = lazy(() => import('./admin/EventSignups'))
+const AdminLogin = lazy(() => import('./admin/AdminLogin'))
 
 function AdminLoading() {
   return <div className="grid min-h-screen place-items-center text-soft">Loading…</div>
@@ -99,6 +100,19 @@ export default function App() {
         <Route path="/r/:code" element={<Storefront><ReferralCatch /></Storefront>} />
 
         {/* ----------------------------------------------------- admin */}
+        {/* Outside the shell on purpose: the shell sends anyone without a
+            session here, so a login page inside it would redirect to
+            itself forever. No <Storefront> either -- no shop nav, no bag,
+            no chat dock on the staff door. */}
+        <Route
+          path="/admin/login"
+          element={
+            <Suspense fallback={<AdminLoading />}>
+              <AdminLogin />
+            </Suspense>
+          }
+        />
+
         <Route
           path="/admin"
           element={

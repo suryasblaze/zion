@@ -46,24 +46,17 @@ export default function AdminShell() {
   if (!ready)
     return <div className="grid min-h-screen place-items-center text-soft">Loading…</div>
 
-  if (!user) return <Navigate to={`/signin?next=${location.pathname}`} replace />
+  // The staff door, not the shop's. Someone opening /admin wants the
+  // panel; sending them to the customer sign-in made the panel look
+  // like somewhere they had arrived by mistake.
+  if (!user)
+    return <Navigate to={`/admin/login?next=${encodeURIComponent(location.pathname)}`} replace />
 
+  // A shopper who followed a link here. /admin/login says the same thing
+  // and offers the way out, so there is one place that explains it.
   if (!['admin', 'staff'].includes(user.role))
-    return (
-      <div className="grid min-h-screen place-items-center px-6 text-center">
-        <div className="max-w-[40ch]">
-          <p className="script mb-2">Not this door</p>
-          <h1 className="text-d3">You do not have access to the admin panel</h1>
-          <p className="mt-3 text-soft">
-            You are signed in as {user.email}. If that is wrong, sign out and use your admin
-            account.
-          </p>
-          <NavLink to="/" className="btn btn-solid mt-6">
-            Back to the shop
-          </NavLink>
-        </div>
-      </div>
-    )
+    return <Navigate to="/admin/login" replace />
+
 
   return (
     <div className="min-h-screen bg-[rgb(250_249_246)] lg:grid lg:grid-cols-[248px_1fr]">
