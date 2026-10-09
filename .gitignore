@@ -21,3 +21,9 @@ frontend/.env
 *.log
 /tiles-check.jpg
 /build-out/
+
+# Archives made by hand for uploading. The real one is built by
+# deploy/package.sh into build-out/, which is already ignored.
+*.zip
+*.tar.gz
+!deploy/*.sh

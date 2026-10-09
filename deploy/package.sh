@@ -38,10 +38,15 @@ mkdir -p "$stage"
 cp -r "$root/frontend/dist" "$stage/dist"
 
 # Backend source. The excludes are the point of using tar over cp here.
+# Archives are excluded because a hand-made backend.zip living in
+# backend/ ships a copy of the backend inside the backend -- harmless,
+# confusing, and it grows every time someone makes another one.
 tar -c -C "$root" \
     --exclude='__pycache__' \
     --exclude='*.pyc' \
     --exclude='.env' \
+    --exclude='*.zip' \
+    --exclude='*.tar.gz' \
     --exclude='backend/tests' \
     --exclude='backend/render.yaml' \
     backend | tar -x -C "$stage"
@@ -96,17 +101,25 @@ fi
 # ---------------------------------------------------------- archives
 say "Writing archives"
 cd "$out"
-rm -f zion-production.tar.gz zion-production.zip
+rm -f zion-production.tar.gz zion-production.zip zion-dist.tar.gz zion-dist.zip
 tar -czf zion-production.tar.gz zion
+
+# Frontend only. Most uploads are this: nginx serves dist/ straight off
+# disk, so a new one is live the moment it lands and needs no restart.
+# The full package is for a first install, or when backend/ changed.
+tar -czf zion-dist.tar.gz -C zion dist
 
 if command -v zip >/dev/null 2>&1; then
   zip -qr zion-production.zip zion
+  (cd zion && zip -qr ../zion-dist.zip dist)
 elif command -v powershell.exe >/dev/null 2>&1; then
   # Git Bash on Windows has tar but no zip.
   powershell.exe -NoProfile -Command \
     "Compress-Archive -Path 'zion' -DestinationPath 'zion-production.zip' -Force" >/dev/null
+  powershell.exe -NoProfile -Command \
+    "Compress-Archive -Path 'zion/dist' -DestinationPath 'zion-dist.zip' -Force" >/dev/null
 else
-  echo "note: no zip tool found, tarball only"
+  echo "note: no zip tool found, tarballs only"
 fi
 
 # ------------------------------------------------------------ report
