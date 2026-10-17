@@ -2,7 +2,7 @@
 from flask import Blueprint, request
 
 import db
-from services import settings_service
+from services import mail_service, settings_service
 from utils.helpers import fail, ok, to_jsonable, valid_email
 
 bp = Blueprint("content", __name__, url_prefix="/api")
@@ -21,10 +21,19 @@ def public_settings():
     for item in nav:
         menus.setdefault(item["menu"], []).append(item)
 
+    # Capabilities, not configuration: the storefront needs to know
+    # whether a receipt will actually be sent before it tells a customer
+    # one has been. No host, port or credential crosses this boundary.
+    capabilities = {
+        "email": mail_service.configured(),
+        "signup_open": settings_service.get_bool("auth.public_signup", False),
+    }
+
     return ok({
         "settings": settings_service.public_settings(),
         "theme": to_jsonable(theme),
         "menus": to_jsonable(menus),
+        "capabilities": capabilities,
     })
 
 

@@ -74,6 +74,12 @@ export const api = {
   me: () => request('/auth/me', { auth: true }),
   updateProfile: (body) => request('/auth/me', { method: 'PATCH', body, auth: true }),
 
+  // ---- password recovery. forgotPassword answers the same way whether
+  // or not the address exists, so there is nothing to branch on here.
+  forgotPassword: (body) => request('/auth/password/forgot', { method: 'POST', body }),
+  checkResetToken: (token) => request(`/auth/password/reset/${encodeURIComponent(token)}`),
+  resetPassword: (body) => request('/auth/password/reset', { method: 'POST', body }),
+
   // ---- referral
   trackReferral: (code, body) => request(`/referral/track/${code}`, { method: 'POST', body }),
   referralPreview: (code) => request(`/referral/preview/${code}`),

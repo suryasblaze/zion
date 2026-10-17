@@ -207,6 +207,14 @@ export default function AdminLogin() {
         </button>
       </form>
 
+      {/* Staff forget passwords too, and the alternative is an SSH
+          session and seed.py --admin. Same flow as a customer's. */}
+      <p className="mt-4 text-tiny">
+        <Link to="/forgot-password" className="text-soft underline underline-offset-4 hover:text-ink">
+          Forgot your password?
+        </Link>
+      </p>
+
       <p className="mt-8 border-t border-line pt-5 text-tiny text-soft">
         Staff only. Shopping?{' '}
         <Link to="/signin" className="text-gold underline underline-offset-4">

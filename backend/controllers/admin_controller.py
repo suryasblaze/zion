@@ -8,11 +8,12 @@ psycopg.sql, never f-strings, and values are always parameters.
 """
 import json
 
-from flask import Blueprint, g, request
+from flask import Blueprint, current_app, g, request
 from psycopg import sql
 
 import db
-from services import referral_service, settings_service, wallet_service
+from services import (email_templates, mail_service, referral_service, settings_service,
+                      wallet_service)
 from utils.auth import admin_required
 from utils.helpers import (client_ip, fail, hash_ip, money, ok, paginate_args, slugify,
                            to_jsonable)
@@ -417,6 +418,22 @@ def update_order(order_id):
             except Exception:
                 pass
 
+    # Tell the customer it has left. Keyed on the order so that editing
+    # the tracking number afterwards, or nudging the status back and
+    # forth, does not post the same "it is on its way" twice.
+    if status == "shipped" and row.get("email"):
+        try:
+            subject, text, html = email_templates.order_shipped(row)
+            mail_service.send(
+                row["email"], subject, text, html,
+                template="order_shipped",
+                reference_type="order",
+                reference_id=str(order_id),
+                idempotency_key=f"shipped:{order_id}",
+            )
+        except Exception:
+            current_app.logger.exception("shipped email for %s could not be queued", order_id)
+
     _audit("update", "orders", order_id, data)
     return ok({"order": to_jsonable(row), "referral": to_jsonable(reward)},
               message="Order updated.")
@@ -509,6 +526,28 @@ def create_customer():
             (email, hash_password(password), full_name, phone, role, code),
         )
         row = cur.fetchone()
+
+    # Tell them the account exists. The password is not in this email
+    # and never will be: it was chosen here, it travels by whatever
+    # channel you are already talking to them on, and a mailbox is not a
+    # safe place to leave it sitting.
+    if data.get("send_welcome", True):
+        try:
+            subject, text, html = email_templates.welcome(
+                full_name,
+                set_by_admin=True,
+                temp_note="Your password was given to you separately. "
+                          "You can change it from your account at any time.",
+            )
+            mail_service.send(
+                email, subject, text, html,
+                template="welcome",
+                reference_type="user",
+                reference_id=str(row["id"]),
+                idempotency_key=f"welcome:{row['id']}",
+            )
+        except Exception:
+            current_app.logger.exception("welcome email for %s could not be queued", email)
 
     _audit("create", "users", row["id"], {"email": email, "role": role})
     return ok(to_jsonable(row),

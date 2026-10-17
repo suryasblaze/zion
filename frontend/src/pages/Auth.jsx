@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Seo from '../components/Seo'
 import { useAuth, useSettings } from '../context/StoreProvider'
 import Img from '../components/Img'
@@ -173,11 +173,22 @@ export default function Auth() {
             </button>
           </form>
 
+          {/* Under the button, where someone looks after a password has
+              just failed -- not in the footer with the contact links. */}
+          <p className="mt-4 text-tiny">
+            <Link to="/forgot-password" className="text-soft underline underline-offset-4 hover:text-ink">
+              Forgot your password?
+            </Link>
+          </p>
+
           <div className="mt-8 border-t border-line pt-6">
-            <p className="text-[0.95rem]">No account yet?</p>
+            <p className="text-[0.95rem]">
+              No account yet?{' '}
+              <Link to="/signup" className="text-gold underline underline-offset-4">Create one</Link>
+            </p>
             <p className="mt-1 max-w-[44ch] text-tiny text-soft">
-              We set accounts up by hand, so there is nothing to fill in here. Message us and we
-              will have you signed in the same day.
+              You can also order as a guest — an account is only needed for coins, referrals and
+              order history. Prefer we set it up? Message us.
             </p>
             <div className="mt-3 flex flex-wrap gap-4 text-tiny">
               <a

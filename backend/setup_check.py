@@ -179,6 +179,26 @@ else:
 # ------------------------------------------------------------ optional
 print("\nOptional\n" + "-" * 46)
 
+# A comma here means CORS_ORIGINS was pasted into the wrong setting. The
+# app picks the https entry so nothing breaks, but every reset link and
+# sitemap URL is built from this, so it should be right in .env.
+from config import Config, _site_url as _site_url_helper  # noqa: E402
+if _site_url_helper.warning:
+    warn("PUBLIC_SITE_URL is a list", _site_url_helper.warning)
+else:
+    ok(f"site URL is {Config.PUBLIC_SITE_URL}")
+
+if Config.SMTP_HOST and Config.MAIL_FROM:
+    ok(f"email via {Config.SMTP_HOST}:{Config.SMTP_PORT} as {Config.MAIL_FROM}")
+elif Config.SMTP_HOST or Config.MAIL_FROM:
+    warn("email half-configured",
+         "SMTP_HOST and MAIL_FROM are both needed. Nothing is sent until both are set.")
+else:
+    warn("email not configured",
+         "Receipts and password resets will not be sent. The shop says so rather than "
+         "claiming otherwise. Set SMTP_HOST and MAIL_FROM to turn it on.")
+
+
 admin_email = os.getenv("ADMIN_EMAIL", "").strip()
 admin_pw = os.getenv("ADMIN_PASSWORD", "")
 if not admin_email or not admin_pw:

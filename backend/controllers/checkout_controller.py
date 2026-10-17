@@ -7,10 +7,11 @@ request only names SKUs and quantities.
 """
 from decimal import ROUND_HALF_UP, Decimal
 
-from flask import Blueprint, g, request
+from flask import Blueprint, current_app, g, request
 
 import db
-from services import referral_service, settings_service, wallet_service
+from services import (email_templates, mail_service, referral_service, settings_service,
+                      wallet_service)
 from utils.auth import login_required, optional_auth
 from utils.helpers import (fail, generate_order_number, money, ok, paginate_args, to_jsonable,
                            valid_email, valid_phone)
@@ -302,6 +303,44 @@ def place():
     # here -- it fires when an admin marks the order paid or delivered.
     if method in ("razorpay", "upi"):
         pass  # the payment webhook marks it paid, then triggers the reward
+
+    # The receipt goes out only now, after the transaction has committed.
+    # Sending inside it would mean emailing a customer about an order
+    # that a later statement could still roll back -- a receipt for
+    # something that never existed, and no way to take it back.
+    #
+    # Wrapped because the order is already real: a mail failure must not
+    # turn a successful checkout into an error the customer sees.
+    if email:
+        try:
+            subject, text, html = email_templates.order_receipt(
+                {
+                    "order_number": order["order_number"],
+                    "subtotal": priced["subtotal"],
+                    "shipping_total": priced["shipping_fee"],
+                    "total": priced["total"],
+                },
+                [
+                    {
+                        "product_name": l["name"],
+                        "variant_label": l["label"],
+                        "quantity": l["quantity"],
+                        "line_total": l["line_total"],
+                    }
+                    for l in priced["lines"]
+                ],
+            )
+            mail_service.send(
+                email, subject, text, html,
+                template="order_receipt",
+                reference_type="order",
+                reference_id=str(order["id"]),
+                # One receipt per order, whatever happens upstream.
+                idempotency_key=f"receipt:{order['id']}",
+            )
+        except Exception:
+            current_app.logger.exception("receipt for %s could not be queued",
+                                         order["order_number"])
 
     return ok(
         {

@@ -1,8 +1,13 @@
 """Registration, sign-in, session. Referral attribution happens here."""
+import hashlib
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from flask import Blueprint, g, request
 
 import db
-from services import referral_service, settings_service
+from config import Config
+from services import email_templates, mail_service, referral_service, settings_service
 from utils.auth import (admin_required, hash_password, issue_tokens, login_required,
                         verify_password)
 from utils.helpers import (client_ip, fail, generate_referral_code, hash_device, hash_ip, ok,
@@ -191,3 +196,145 @@ def change_password():
     db.execute("update users set password_hash = %s where id = %s",
                (hash_password(new), g.user["id"]))
     return ok(message="Password changed.")
+
+
+# =====================================================================
+# Forgotten passwords
+#
+# The shape of these two endpoints matters as much as what they do.
+#
+# /password/forgot answers the same way whether or not the address has
+# an account. Anything else turns the form into a way to ask "does this
+# person shop here" and get a reliable answer, which is a privacy leak
+# before it is a security one.
+#
+# The token is random, single-use and short-lived, and only its sha256
+# is stored, so the table is worthless to anyone who reads it.
+# =====================================================================
+
+# Deliberately vague, and identical in both branches.
+_FORGOT_REPLY = ("If that address has an account, a reset link is on its way. "
+                 "Check your spam folder if it does not arrive in a few minutes.")
+
+
+def _hash_token(token):
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+@bp.post("/password/forgot")
+def forgot_password():
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+
+    if not valid_email(email):
+        return fail("Enter a valid email address.", 422,
+                    errors={"email": "Enter a valid email address."})
+
+    user = db.query_one(
+        "select id, email, full_name from users where email = %s", (email,))
+
+    # No account: stop here, but say exactly what we say on success.
+    if not user:
+        return ok(message=_FORGOT_REPLY)
+
+    # One live link at a time. Issuing a second without retiring the
+    # first leaves two working keys to the same door, and the older one
+    # is the one more likely to have been seen by someone else.
+    db.execute(
+        """update password_resets
+              set used_at = now()
+            where user_id = %s and used_at is null and expires_at > now()""",
+        (user["id"],),
+    )
+
+    token = secrets.token_urlsafe(32)
+    minutes = Config.PASSWORD_RESET_TTL_MIN
+    expires = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+
+    db.execute(
+        """insert into password_resets (user_id, token_hash, expires_at, requested_ip)
+           values (%s, %s, %s, %s)""",
+        (user["id"], _hash_token(token), expires, hash_ip(client_ip())),
+    )
+
+    link = f"{Config.PUBLIC_SITE_URL}/reset-password?token={token}"
+    subject, text, html = email_templates.password_reset(
+        user["full_name"], link, minutes)
+
+    mail_service.send(
+        user["email"], subject, text, html,
+        template="password_reset",
+        reference_type="user",
+        reference_id=str(user["id"]),
+    )
+
+    return ok(message=_FORGOT_REPLY)
+
+
+@bp.get("/password/reset/<token>")
+def check_reset_token(token):
+    """
+    Lets the page say "this link has expired" before someone types a new
+    password twice, rather than after.
+    """
+    row = db.query_one(
+        """select pr.id, pr.used_at, pr.expires_at, u.email
+             from password_resets pr
+             join users u on u.id = pr.user_id
+            where pr.token_hash = %s""",
+        (_hash_token(token or ""),),
+    )
+    if not row or row["used_at"] or row["expires_at"] <= datetime.now(timezone.utc):
+        return fail("That reset link has expired or has already been used.", 410,
+                    code="reset_invalid")
+
+    # Enough to reassure someone they are resetting the right account,
+    # not enough to be worth harvesting.
+    masked = row["email"].split("@")
+    hint = f"{masked[0][:2]}{'*' * max(1, len(masked[0]) - 2)}@{masked[1]}"
+    return ok({"email_hint": hint})
+
+
+@bp.post("/password/reset")
+def reset_password():
+    data = request.get_json(silent=True) or {}
+    token = (data.get("token") or "").strip()
+    new = data.get("password") or ""
+
+    problems = password_problems(new)
+    if problems:
+        return fail("Choose a stronger password.", 422,
+                    errors={"password": " ".join(problems)})
+
+    # Claim the token and change the password together. Two statements
+    # with a gap between them is two chances for a link to be spent
+    # twice by someone clicking twice.
+    with db.transaction() as cur:
+        cur.execute(
+            """select id, user_id from password_resets
+                where token_hash = %s
+                  and used_at is null
+                  and expires_at > now()
+                for update""",
+            (_hash_token(token),),
+        )
+        row = cur.fetchone()
+        if not row:
+            return fail("That reset link has expired or has already been used.", 410,
+                        code="reset_invalid")
+
+        cur.execute("update password_resets set used_at = now() where id = %s", (row["id"],))
+        cur.execute("update users set password_hash = %s where id = %s",
+                    (hash_password(new), row["user_id"]))
+
+        # Any other link outstanding for this account dies with it: if
+        # someone requested several, finishing one should not leave the
+        # rest usable.
+        cur.execute(
+            """update password_resets
+                  set used_at = now()
+                where user_id = %s and used_at is null""",
+            (row["user_id"],),
+        )
+
+    return ok(message="Your password has been changed. You can sign in now.")

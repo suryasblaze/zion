@@ -15,7 +15,7 @@ const BLANK_ADDRESS = {
 export default function Checkout() {
   const { lines, subtotal, clear } = useCart()
   const { user } = useAuth()
-  const { get } = useSettings()
+  const { get, can } = useSettings()
   const navigate = useNavigate()
 
   const [address, setAddress] = useState(BLANK_ADDRESS)
@@ -147,8 +147,21 @@ export default function Checkout() {
               </p>
             ) : (
               <p className="mt-4 text-soft">
-                We have emailed a receipt to {email}. You will hear from us again when it ships —
-                usually within a working day.
+                {/* Only claim a receipt when one can actually be sent.
+                    This said "we have emailed a receipt" for weeks while
+                    no mail was configured at all, which left people
+                    waiting for something that was never coming. */}
+                {can('email') ? (
+                  <>
+                    We have emailed a receipt to {email}. You will hear from us again when it
+                    ships — usually within a working day.
+                  </>
+                ) : (
+                  <>
+                    Keep your order number safe — we will confirm on WhatsApp and let you know
+                    when it ships, usually within a working day.
+                  </>
+                )}
               </p>
             )}
             <p className="nums mt-6 font-display text-[1.6rem]">{inr(placed.total)}</p>
@@ -215,7 +228,7 @@ export default function Checkout() {
             <F id="full_name" label="Full name" value={address.full_name} err={errors.full_name}
                onChange={(v) => setAddress({ ...address, full_name: v })} className="sm:col-span-2" />
             <F id="email" label="Email" type="email" value={email} err={errors.email}
-               onChange={setEmail} hint="For the receipt and shipping updates." />
+               onChange={setEmail} hint={can('email') ? "For the receipt and shipping updates." : "So we can reach you about this order."} />
             <F id="phone" label="Phone" type="tel" value={address.phone} err={errors.phone}
                onChange={(v) => setAddress({ ...address, phone: v })} />
             <F id="line1" label="Address" value={address.line1} err={errors.line1}

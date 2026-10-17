@@ -27,6 +27,10 @@ const FALLBACK_SETTINGS = {
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(FALLBACK_SETTINGS)
   const [theme, setTheme] = useState(null)
+  // What the server can actually do right now -- whether email is
+  // configured, whether registration is open. The storefront should
+  // not promise a receipt the backend has no way to send.
+  const [capabilities, setCapabilities] = useState({ email: false, signup_open: false })
 
   useEffect(() => {
     api
@@ -34,6 +38,7 @@ export function SettingsProvider({ children }) {
       .then((res) => {
         if (res?.settings) setSettings({ ...FALLBACK_SETTINGS, ...res.settings })
         if (res?.theme) setTheme(res.theme)
+        if (res?.capabilities) setCapabilities(res.capabilities)
       })
       .catch(() => {})
   }, [])
@@ -71,9 +76,11 @@ export function SettingsProvider({ children }) {
     () => ({
       settings,
       theme,
+      capabilities,
+      can: (key) => !!capabilities[key],
       get: (key, dflt) => settings[key] ?? dflt,
     }),
-    [settings, theme]
+    [settings, theme, capabilities]
   )
 
   return <SettingsCtx.Provider value={value}>{children}</SettingsCtx.Provider>

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation } from 'react-router-dom'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -16,6 +16,9 @@ import OurRoots from './pages/OurRoots'
 import ReferralCatch from './pages/ReferralCatch'
 import EventSignup from './pages/EventSignup'
 import Auth from './pages/Auth'
+import Signup from './pages/Signup'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Account from './pages/Account'
 import Checkout from './pages/Checkout'
 import NotFound from './pages/NotFound'
@@ -91,9 +94,12 @@ export default function App() {
 
         {/* accounts */}
         <Route path="/signin" element={<Storefront><Auth /></Storefront>} />
-        {/* No public registration: accounts are made under Admin > Customers.
-            Anyone with an old /signup link lands on sign-in instead. */}
-        <Route path="/signup" element={<Navigate to="/signin" replace />} />
+        {/* Registration is gated server-side by auth.public_signup. The
+            page exists either way: with it off the API refuses and the
+            page explains, which beats a route that silently redirects. */}
+        <Route path="/signup" element={<Storefront><Signup /></Storefront>} />
+        <Route path="/forgot-password" element={<Storefront><ForgotPassword /></Storefront>} />
+        <Route path="/reset-password" element={<Storefront><ResetPassword /></Storefront>} />
         <Route path="/account" element={<Storefront><Account /></Storefront>} />
 
         {/* referral links land here, get attributed, then invite a signup */}
