@@ -21,6 +21,7 @@ configuration rather than a change of behaviour.
 """
 import logging
 import smtplib
+import ssl
 import threading
 from email.message import EmailMessage
 from email.utils import formataddr, make_msgid
@@ -90,18 +91,39 @@ def _deliver(to_email, subject, text, html, log_id):
     if html:
         msg.add_alternative(html, subtype="html")
 
+    # smtplib's default is ssl._create_stdlib_context(), which sets
+    # check_hostname=False and verify_mode=CERT_NONE -- it encrypts but
+    # verifies nothing, so anything that can answer on the wire can
+    # present any certificate and be believed. Since the very next thing
+    # this does is send SMTP_USER and SMTP_PASSWORD, that is a
+    # credential handover to whoever is in the middle. Pass a verifying
+    # context explicitly.
+    ctx = ssl.create_default_context()
+
     try:
         if Config.SMTP_SSL:
-            server = smtplib.SMTP_SSL(Config.SMTP_HOST, Config.SMTP_PORT, timeout=20)
+            server = smtplib.SMTP_SSL(Config.SMTP_HOST, Config.SMTP_PORT,
+                                      timeout=20, context=ctx)
         else:
             server = smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT, timeout=20)
         with server:
             server.ehlo()
             if Config.SMTP_STARTTLS and not Config.SMTP_SSL:
-                server.starttls()
+                server.starttls(context=ctx)
                 server.ehlo()
+
             if Config.SMTP_USER:
+                # Belt to the braces above. If STARTTLS was skipped, or
+                # was configured and silently did not happen, the socket
+                # is plain and the password would cross it in the clear
+                # -- base64 is not encryption. Refuse rather than send.
+                if not isinstance(server.sock, ssl.SSLSocket):
+                    raise RuntimeError(
+                        "refusing to send credentials over an unencrypted connection; "
+                        "set SMTP_STARTTLS=true (port 587) or SMTP_SSL=true (port 465)"
+                    )
                 server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
+
             server.send_message(msg)
         _mark(log_id, "sent")
         log.info("sent %r to %s", subject, to_email)
