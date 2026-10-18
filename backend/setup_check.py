@@ -186,10 +186,10 @@ from config import Config, _site_url as _site_url_helper  # noqa: E402
 if _site_url_helper.warning:
     warn("PUBLIC_SITE_URL is a list", _site_url_helper.warning)
 else:
-    ok(f"site URL is {Config.PUBLIC_SITE_URL}")
+    good(f"site URL is {Config.PUBLIC_SITE_URL}")
 
 if Config.SMTP_HOST and Config.MAIL_FROM:
-    ok(f"email via {Config.SMTP_HOST}:{Config.SMTP_PORT} as {Config.MAIL_FROM}")
+    good(f"email via {Config.SMTP_HOST}:{Config.SMTP_PORT} as {Config.MAIL_FROM}")
 elif Config.SMTP_HOST or Config.MAIL_FROM:
     warn("email half-configured",
          "SMTP_HOST and MAIL_FROM are both needed. Nothing is sent until both are set.")

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Seo from '../components/Seo'
 import Img from '../components/Img'
 import { useAuth, useSettings } from '../context/StoreProvider'
@@ -30,6 +30,12 @@ export default function Signup() {
   const { register, user } = useAuth()
   const { get } = useSettings()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Checkout sends people here with ?next=/checkout, so finishing the
+  // form puts them back where they were rather than on an account page
+  // they then have to navigate away from.
+  const next = new URLSearchParams(location.search).get('next') || '/account'
 
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', password: '' })
   const [errors, setErrors] = useState({})
@@ -43,8 +49,8 @@ export default function Signup() {
   const referredBy = typeof localStorage !== 'undefined' ? localStorage.getItem('zion.ref') : null
 
   useEffect(() => {
-    if (user) navigate('/account', { replace: true })
-  }, [user, navigate])
+    if (user) navigate(next, { replace: true })
+  }, [user, navigate, next])
 
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -70,7 +76,7 @@ export default function Signup() {
     setNotice(null)
     try {
       await register(form)
-      navigate('/account', { replace: true })
+      navigate(next, { replace: true })
     } catch (err) {
       // Registration being shut is not a form error -- no amount of
       // retyping fixes it, so the form goes away and the page explains.
@@ -202,10 +208,15 @@ export default function Signup() {
           <div className="mt-8 border-t border-line pt-5 text-tiny text-soft">
             <p>
               Already have an account?{' '}
-              <Link to="/signin" className="text-gold underline underline-offset-4">Sign in</Link>
+              <Link
+                to={`/signin${next !== '/account' ? `?next=${encodeURIComponent(next)}` : ''}`}
+                className="text-gold underline underline-offset-4"
+              >
+                Sign in
+              </Link>
             </p>
             <p className="mt-2">
-              You do not need an account to order — guest checkout works for everyone.
+              An account is needed to place an order — browsing and filling your bag are not.
             </p>
           </div>
         </div>

@@ -318,7 +318,7 @@ test of the referral programme.
 **Placeholders to replace**
 
 - Prices (₹279–₹1,499) are my invention. Send the real ones and I will reseed.
-- `zionherbs.com`, `hello@zionherbs.com`. The WhatsApp number
+- `zionherbs.com`, `care@zionherbs.com`. The WhatsApp number
   (+91 63840 13131) is real, taken from the posters.
 
 **Demo mode** — `frontend/src/data/demo.js` ships in the production bundle

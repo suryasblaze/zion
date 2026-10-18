@@ -209,16 +209,24 @@ def quote():
 
 
 # ===================================================================== place
+#
+# Signing in is required to buy, but not to browse or to fill a bag --
+# the cart lives in the browser and costs nothing to keep. The quote
+# above stays open for the same reason: someone should be able to see
+# what their bag comes to before being asked to make an account.
+#
+# This is the boundary that actually enforces it. The checkout page
+# shows the gate, but a page can be skipped and this cannot.
 @bp.post("/checkout/place")
-@optional_auth
+@login_required
 def place():
     data = request.get_json(silent=True) or {}
-    user = getattr(g, "user", None)
-    user_id = user["id"] if user else None
+    user = g.user
+    user_id = user["id"]
 
     address = data.get("shipping_address") or {}
-    email = (data.get("email") or (user or {}).get("email") or "").strip().lower()
-    phone = (address.get("phone") or (user or {}).get("phone") or "").strip()
+    email = (data.get("email") or user.get("email") or "").strip().lower()
+    phone = (address.get("phone") or user.get("phone") or "").strip()
     method = data.get("payment_method") or "cod"
 
     errors = {}

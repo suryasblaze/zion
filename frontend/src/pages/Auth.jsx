@@ -33,7 +33,7 @@ export default function Auth() {
   const next = explicitNext || homeFor(user)
   const coinName = get('wallet.coin_name', 'ZION Coins')
   const whatsapp = get('store.whatsapp', '916384013131')
-  const storeEmail = get('store.email', 'hello@zionherbs.com')
+  const storeEmail = get('store.email', 'care@zionherbs.com')
 
   useEffect(() => {
     if (user) navigate(next, { replace: true })
@@ -187,8 +187,8 @@ export default function Auth() {
               <Link to="/signup" className="text-gold underline underline-offset-4">Create one</Link>
             </p>
             <p className="mt-1 max-w-[44ch] text-tiny text-soft">
-              You can also order as a guest — an account is only needed for coins, referrals and
-              order history. Prefer we set it up? Message us.
+              An account takes a moment and is needed to place an order. It also keeps your
+              order history, coins and referral link together.
             </p>
             <div className="mt-3 flex flex-wrap gap-4 text-tiny">
               <a

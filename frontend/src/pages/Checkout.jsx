@@ -212,14 +212,25 @@ export default function Checkout() {
             </p>
           )}
 
+          {/* An account is required to buy. The bag is not -- it lives in
+              this browser and keeps whatever was put in it, so nobody
+              loses their selection by stopping to sign in here.
+
+              The real check is on /checkout/place, which refuses without
+              a session. This is the explanation, not the lock. */}
           {!user && (
-            <div className="mb-8 border border-line bg-surface px-5 py-4">
-              <p className="text-[0.95rem]">
-                <Link to="/signin?next=/checkout" className="text-gold underline underline-offset-4">
-                  Sign in
-                </Link>{' '}
-                to use your {coinName} and any referral discount.
+            <div className="mb-8 border border-line bg-surface p-7">
+              <p className="script mb-1">One step first</p>
+              <h2 className="text-d3">Sign in to place your order</h2>
+              <p className="mt-3 max-w-[48ch] text-soft">
+                Orders are tied to an account so you can track them, collect {coinName} and
+                reorder in a couple of taps. Your bag is saved — it will be here when you
+                come back.
               </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link to="/signin?next=/checkout" className="btn btn-gold">Sign in</Link>
+                <Link to="/signup?next=/checkout" className="btn btn-solid">Create an account</Link>
+              </div>
             </div>
           )}
 
@@ -273,18 +284,29 @@ export default function Checkout() {
               ))}
           </div>
 
-          <button
-            disabled={placing || !quote}
-            className="btn btn-solid mt-8 w-full disabled:opacity-50"
-          >
-            {placing
-              ? method === 'razorpay'
-                ? 'Opening payment…'
-                : 'Placing your order…'
-              : quote
-              ? `${method === 'razorpay' ? 'Pay' : 'Place order'} · ${inr(quote.total)}`
-              : 'Place order'}
-          </button>
+          {/* Signed out, this becomes the way in rather than a dead
+              button. Leaving it enabled would let someone fill the whole
+              form, press it, and be told by the server what the page
+              could have told them at the top. */}
+          {user ? (
+            <button
+              disabled={placing || !quote}
+              className="btn btn-solid mt-8 w-full disabled:opacity-50"
+            >
+              {placing
+                ? method === 'razorpay'
+                  ? 'Opening payment…'
+                  : 'Placing your order…'
+                : quote
+                ? `${method === 'razorpay' ? 'Pay' : 'Place order'} · ${inr(quote.total)}`
+                : 'Place order'}
+            </button>
+          ) : (
+            <Link to="/signin?next=/checkout" className="btn btn-gold mt-8 w-full">
+              Sign in to place this order
+              {quote ? ` · ${inr(quote.total)}` : ''}
+            </Link>
+          )}
 
           <p className="mt-4 text-center text-tiny text-soft">
             Prefer to talk?{' '}

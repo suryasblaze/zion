@@ -100,22 +100,45 @@ export default function Header() {
                 {user.full_name?.split(' ')[0] || 'Account'}
               </Link>
             ) : (
-              <Link
-                to="/signin"
-                className="group hidden items-center gap-2 rounded bg-gold px-5 py-2.5 text-paper
-                           shadow-[0_1px_0_rgba(0,0,0,0.06)] transition-all duration-300
-                           hover:brightness-110 hover:shadow-[0_3px_14px_rgba(200,164,77,0.45)]
-                           sm:inline-flex"
-              >
-                <svg
-                  width="15" height="15" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" strokeWidth="1.7" aria-hidden="true"
+              <>
+                {/* Two filled buttons would fight. Signing in is the
+                    commoner errand once a shop has customers, so it
+                    keeps the gold; creating an account is the black
+                    one beside it. */}
+                <Link
+                  to="/signin"
+                  className="hidden items-center gap-2 rounded bg-gold px-5 py-2.5 text-paper
+                             shadow-[0_1px_0_rgba(0,0,0,0.06)] transition-all duration-300
+                             hover:brightness-110 hover:shadow-[0_3px_14px_rgba(200,164,77,0.45)]
+                             sm:inline-flex"
                 >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Sign in
-              </Link>
+                  <svg
+                    width="15" height="15" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="1.7" aria-hidden="true"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  Sign in
+                </Link>
+
+                <Link
+                  to="/signup"
+                  className="hidden items-center gap-2 rounded bg-ink px-5 py-2.5 text-paper
+                             transition-all duration-300 hover:bg-accent-deep
+                             hover:shadow-[0_3px_14px_rgba(23,19,16,0.3)] lg:inline-flex"
+                >
+                  <svg
+                    width="15" height="15" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="1.7" aria-hidden="true"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M19 8v6M22 11h-6" />
+                  </svg>
+                  Sign up
+                </Link>
+              </>
             )}
 
             <button
@@ -168,6 +191,26 @@ export default function Header() {
                 </svg>
                 {user ? user.full_name?.split(' ')[0] || 'My account' : 'Sign in'}
               </Link>
+
+              {/* Only for signed-out visitors: someone already signed in
+                  has no use for it, and the menu is short on purpose. */}
+              {!user && (
+                <Link
+                  to="/signup"
+                  onClick={() => setMenu(false)}
+                  className="mt-2 flex items-center justify-center gap-2 rounded bg-ink px-5 py-3 text-paper"
+                >
+                  <svg
+                    width="15" height="15" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="1.7" aria-hidden="true"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M19 8v6M22 11h-6" />
+                  </svg>
+                  Create an account
+                </Link>
+              )}
             </div>
           </nav>
         )}
