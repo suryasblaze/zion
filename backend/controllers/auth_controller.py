@@ -3,7 +3,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from flask import Blueprint, g, request
+from flask import Blueprint, current_app, g, request
 
 import db
 from config import Config
@@ -97,6 +97,23 @@ def register():
         if referral and referral.get("welcome_points"):
             cur.execute("select wallet_balance from users where id = %s", (user["id"],))
             user["wallet_balance"] = cur.fetchone()["wallet_balance"]
+
+    # Outside the transaction, like every other send: the account exists
+    # by now, and a mail failure must not undo it. Admin-created accounts
+    # already got one of these; people who signed themselves up were
+    # getting nothing at all, which is the one moment they are most
+    # likely to be watching their inbox.
+    try:
+        subject, text, html = email_templates.welcome(full_name)
+        mail_service.send(
+            email, subject, text, html,
+            template="welcome",
+            reference_type="user",
+            reference_id=str(user["id"]),
+            idempotency_key=f"welcome:{user['id']}",
+        )
+    except Exception:
+        current_app.logger.exception("welcome email for %s could not be queued", email)
 
     tokens = issue_tokens(user)
     return ok(

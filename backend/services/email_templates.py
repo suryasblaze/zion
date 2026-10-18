@@ -242,6 +242,65 @@ ZION Herbs
     return subject, text, html
 
 
+# ------------------------------------------------------- status change
+
+# What each step means to the person waiting, rather than what it means
+# in the admin panel. "packed" is not here on purpose: it is an internal
+# state, and an email that says nothing a customer can act on is one
+# more reason to stop opening them.
+STATUS_COPY = {
+    "confirmed": (
+        "Your order is confirmed",
+        "We have checked it over and it is going into the packing queue. "
+        "The next note will be when it leaves us.",
+    ),
+    "delivered": (
+        "Your order has arrived",
+        "It should be with you now. If anything is missing or damaged, reply to this "
+        "email and we will put it right.",
+    ),
+    "cancelled": (
+        "Your order has been cancelled",
+        "Nothing further will be sent. Anything already paid is refunded to the original "
+        "method, usually within five working days.",
+    ),
+    "refunded": (
+        "Your order has been refunded",
+        "The amount is on its way back to the method you paid with, usually within five "
+        "working days.",
+    ),
+}
+
+
+def order_status(order, status):
+    """None when this status is not worth an email."""
+    copy = STATUS_COPY.get(status)
+    if not copy:
+        return None
+
+    heading, line = copy
+    number = order["order_number"]
+    subject = f"{heading.replace('Your order', f'Order {number}')}"
+
+    text = f"""{heading}.
+
+Order {number}
+
+{line}
+
+ZION Herbs
+{Config.PUBLIC_SITE_URL}
+"""
+    html = _shell(
+        heading,
+        line,
+        f"""<p style="margin:0;font-size:12.5px;letter-spacing:.12em;
+                      text-transform:uppercase;color:{SOFT};">Order {number}</p>""",
+        button=("View your orders", f"{Config.PUBLIC_SITE_URL}/account"),
+    )
+    return subject, text, html
+
+
 # ------------------------------------------------------------ welcome
 
 def welcome(name, *, set_by_admin=False, temp_note=None):

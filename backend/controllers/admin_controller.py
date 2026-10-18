@@ -418,21 +418,31 @@ def update_order(order_id):
             except Exception:
                 pass
 
-    # Tell the customer it has left. Keyed on the order so that editing
-    # the tracking number afterwards, or nudging the status back and
-    # forth, does not post the same "it is on its way" twice.
-    if status == "shipped" and row.get("email"):
+    # Keep the customer posted. Every key is per order AND per status, so
+    # nudging an order back and forth in the panel -- which happens while
+    # someone is figuring out the workflow -- cannot post the same note
+    # twice. Statuses with nothing useful to say to a customer, like
+    # 'packed', produce no email at all.
+    if status and row.get("email"):
         try:
-            subject, text, html = email_templates.order_shipped(row)
-            mail_service.send(
-                row["email"], subject, text, html,
-                template="order_shipped",
-                reference_type="order",
-                reference_id=str(order_id),
-                idempotency_key=f"shipped:{order_id}",
-            )
+            if status == "shipped":
+                built = email_templates.order_shipped(row)
+                template, key = "order_shipped", f"shipped:{order_id}"
+            else:
+                built = email_templates.order_status(row, status)
+                template, key = f"order_{status}", f"status:{status}:{order_id}"
+
+            if built:
+                subject, text, html = built
+                mail_service.send(
+                    row["email"], subject, text, html,
+                    template=template,
+                    reference_type="order",
+                    reference_id=str(order_id),
+                    idempotency_key=key,
+                )
         except Exception:
-            current_app.logger.exception("shipped email for %s could not be queued", order_id)
+            current_app.logger.exception("status email for %s could not be queued", order_id)
 
     _audit("update", "orders", order_id, data)
     return ok({"order": to_jsonable(row), "referral": to_jsonable(reward)},
