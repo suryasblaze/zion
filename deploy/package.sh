@@ -101,7 +101,9 @@ fi
 # ---------------------------------------------------------- archives
 say "Writing archives"
 cd "$out"
-rm -f zion-production.tar.gz zion-production.zip zion-dist.tar.gz zion-dist.zip
+rm -f zion-production.tar.gz zion-production.zip \
+      zion-dist.tar.gz zion-dist.zip \
+      zion-backend.tar.gz zion-backend.zip
 tar -czf zion-production.tar.gz zion
 
 # Frontend only. Most uploads are this: nginx serves dist/ straight off
@@ -109,15 +111,23 @@ tar -czf zion-production.tar.gz zion
 # The full package is for a first install, or when backend/ changed.
 tar -czf zion-dist.tar.gz -C zion dist
 
+# Backend only, for when the Python changed but the build did not.
+# Same exclusions as the full package -- no .env, no tests, no
+# __pycache__ -- so it unpacks straight over a live install.
+tar -czf zion-backend.tar.gz -C zion backend
+
 if command -v zip >/dev/null 2>&1; then
   zip -qr zion-production.zip zion
   (cd zion && zip -qr ../zion-dist.zip dist)
+  (cd zion && zip -qr ../zion-backend.zip backend)
 elif command -v powershell.exe >/dev/null 2>&1; then
   # Git Bash on Windows has tar but no zip.
   powershell.exe -NoProfile -Command \
     "Compress-Archive -Path 'zion' -DestinationPath 'zion-production.zip' -Force" >/dev/null
   powershell.exe -NoProfile -Command \
     "Compress-Archive -Path 'zion/dist' -DestinationPath 'zion-dist.zip' -Force" >/dev/null
+  powershell.exe -NoProfile -Command \
+    "Compress-Archive -Path 'zion/backend' -DestinationPath 'zion-backend.zip' -Force" >/dev/null
 else
   echo "note: no zip tool found, tarballs only"
 fi
