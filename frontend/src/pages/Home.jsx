@@ -45,7 +45,17 @@ export default function Home() {
   const [openSlug, setOpenSlug] = useState(null)
   const { add } = useCart()
   const { get } = useSettings()
-  const tea = TEAS[active]
+
+  // Must come before anything reads TEAS. It was below the hero's
+  // `TEAS[active]` and the const was in its temporal dead zone, so the
+  // whole page threw on first render and showed nothing. A build will
+  // not catch that; only loading the page does.
+  const { teas: TEAS, sets: SETS } = useCatalog()
+
+  // The live list can be shorter than the bundled one -- deactivate a
+  // tea in the panel and the index the carousel is sitting on may no
+  // longer exist.
+  const tea = TEAS[active] || TEAS[0]
 
   const coinName = get('wallet.coin_name', 'ZION Coins')
 
@@ -59,9 +69,6 @@ export default function Home() {
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' })
   }, [openSlug])
-
-  // From the database when it answers, the bundled copy until then.
-  const { teas: TEAS, sets: SETS } = useCatalog()
 
   const cols = useColumns()
   const all = [...TEAS, ...SETS]
@@ -280,7 +287,7 @@ export default function Home() {
             </p>
 
             <div className="mt-9 grid gap-6 sm:grid-cols-2">
-              {[TEAS[4], TEAS[5]].map((t) => (
+              {TEAS.slice(4, 6).map((t) => (
                 <figure key={t.slug} className="m-0" style={accentStyle(t)}>
                   <Link to={`/product/${t.slug}`}>
                     <Img

@@ -263,8 +263,12 @@ export function CatalogProvider({ children }) {
         if (!Array.isArray(list) || !list.length) return
         setProducts(list)
 
+        // Only switch if the live data actually has teas in it. An API
+        // that answers with nothing but gift sets -- every single-origin
+        // row deactivated, say -- would otherwise empty the hero and the
+        // grid, and the pages index into those lists.
         const split = splitCatalogue(list)
-        if (split) {
+        if (split && split.teas.length) {
           setTeas(split.teas)
           setSets(split.sets)
           setLive(true)
