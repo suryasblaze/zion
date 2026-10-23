@@ -229,9 +229,8 @@ def change_password():
 # is stored, so the table is worthless to anyone who reads it.
 # =====================================================================
 
-# Deliberately vague, and identical in both branches.
-_FORGOT_REPLY = ("If that address has an account, a reset link is on its way. "
-                 "Check your spam folder if it does not arrive in a few minutes.")
+_FORGOT_REPLY = ("A reset link is on its way. Check your spam folder if it does not "
+                 "arrive in a few minutes.")
 
 
 def _hash_token(token):
@@ -250,9 +249,23 @@ def forgot_password():
     user = db.query_one(
         "select id, email, full_name from users where email = %s", (email,))
 
-    # No account: stop here, but say exactly what we say on success.
+    # Say so when there is no account.
+    #
+    # The careful answer is to reply identically either way, so the form
+    # cannot be used to discover who shops here. That protection is
+    # already gone: /auth/register answers "an account with that email
+    # already exists", so the same question is answerable one page over.
+    # Guarding this door and not that one bought nothing and cost every
+    # mistyped address a silent failure.
+    #
+    # Bulk enumeration is held off by the rate limits instead -- nginx
+    # caps this path at 10 a minute, the same as sign-in.
     if not user:
-        return ok(message=_FORGOT_REPLY)
+        return fail(
+            "We have no account for that address. Check the spelling, or create "
+            "an account if you have not already.",
+            404, code="no_account", errors={"email": "No account found."},
+        )
 
     # A cooldown, per account rather than per IP.
     #

@@ -18,6 +18,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState(null)
+  const [noAccount, setNoAccount] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const submit = async (e) => {
@@ -28,11 +29,13 @@ export default function ForgotPassword() {
     }
     setBusy(true)
     setError(null)
+    setNoAccount(false)
     try {
       await api.forgotPassword({ email: email.trim() })
       setSent(true)
     } catch (err) {
-      setError(err.payload?.errors?.email || err.message || 'Something went wrong. Try again.')
+      setNoAccount(err.payload?.code === 'no_account')
+      setError(err.message || 'Something went wrong. Try again.')
     } finally {
       setBusy(false)
     }
@@ -49,8 +52,8 @@ export default function ForgotPassword() {
               <p className="script mb-1">Check your inbox</p>
               <h1 className="text-d2">The link is on its way</h1>
               <p className="mt-5 text-soft">
-                If <span className="text-ink">{email}</span> has an account, a reset link has
-                been sent. It works once and expires in an hour.
+                A reset link has been sent to <span className="text-ink">{email}</span>. It
+                works once and expires in an hour.
               </p>
               <p className="mt-4 text-tiny text-soft">
                 Nothing after a few minutes? Check your spam folder, and that you typed the
@@ -67,12 +70,19 @@ export default function ForgotPassword() {
               </p>
 
               {error && (
-                <p
+                <div
                   role="alert"
                   className="mt-6 border-l-2 border-[#B4472F] bg-[#B4472F]/[0.06] px-4 py-3 text-[0.92rem] text-[#8F3623]"
                 >
-                  {error}
-                </p>
+                  <p>{error}</p>
+                  {noAccount && (
+                    <p className="mt-2">
+                      <Link to="/signup" className="underline underline-offset-4">
+                        Create an account
+                      </Link>
+                    </p>
+                  )}
+                </div>
               )}
 
               <form onSubmit={submit} className="mt-7" noValidate>
@@ -83,7 +93,7 @@ export default function ForgotPassword() {
                   autoComplete="email"
                   autoFocus
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError(null) }}
+                  onChange={(e) => { setEmail(e.target.value); setError(null); setNoAccount(false) }}
                   className="field py-3.5"
                 />
                 <button
