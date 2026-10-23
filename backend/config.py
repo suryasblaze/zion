@@ -105,6 +105,11 @@ class Config:
     # reading it after lunch.
     PASSWORD_RESET_TTL_MIN = _int("PASSWORD_RESET_TTL_MIN", 60)
 
+    # How long before the same account can be sent another reset link.
+    # Short enough that someone whose first mail went to spam is not
+    # stuck, long enough that the form cannot be used to flood a mailbox.
+    PASSWORD_RESET_COOLDOWN_MIN = _int("PASSWORD_RESET_COOLDOWN_MIN", 2)
+
     @classmethod
     def validate(cls):
         """Fail loudly at boot rather than mysteriously at request time."""

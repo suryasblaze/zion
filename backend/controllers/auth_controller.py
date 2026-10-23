@@ -254,6 +254,29 @@ def forgot_password():
     if not user:
         return ok(message=_FORGOT_REPLY)
 
+    # A cooldown, per account rather than per IP.
+    #
+    # The form is open to anyone -- it has to be, since the whole point
+    # is that you cannot sign in -- and the mail lands in someone else's
+    # inbox. Without this, typing a known address repeatedly buries its
+    # owner in reset mail and spends the day's sending quota. nginx caps
+    # the requests from one address; this caps what any number of them
+    # can do to one account.
+    #
+    # Deliberately silent: the reply is the same either way, so a
+    # stranger cannot learn that a request is already outstanding.
+    recent = db.query_one(
+        """select created_at from password_resets
+             where user_id = %s
+               and used_at is null
+               and expires_at > now()
+               and created_at > now() - make_interval(mins => %s)
+             order by created_at desc limit 1""",
+        (user["id"], Config.PASSWORD_RESET_COOLDOWN_MIN),
+    )
+    if recent:
+        return ok(message=_FORGOT_REPLY)
+
     # One live link at a time. Issuing a second without retiring the
     # first leaves two working keys to the same door, and the older one
     # is the one more likely to have been seen by someone else.
