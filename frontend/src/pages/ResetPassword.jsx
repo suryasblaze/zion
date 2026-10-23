@@ -75,10 +75,11 @@ export default function ResetPassword() {
           {state === 'invalid' && (
             <>
               <p className="script mb-1">That link is spent</p>
-              <h1 className="text-d2">This link has expired</h1>
+              <h1 className="text-d2">This link no longer works</h1>
               <p className="mt-5 text-soft">
-                Reset links work once and last an hour. Ask for a fresh one and it will be in
-                your inbox in a moment.
+                Links last an hour and work once. If you asked more than once,{' '}
+                <span className="text-ink">only the newest email works</span> — check for a
+                more recent one before asking again.
               </p>
               <Link to="/forgot-password" className="btn btn-gold mt-8">Send a new link</Link>
             </>

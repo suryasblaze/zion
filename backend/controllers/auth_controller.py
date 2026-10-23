@@ -338,8 +338,12 @@ def check_reset_token(token):
         (_hash_token(token or ""),),
     )
     if not row or row["used_at"] or row["expires_at"] <= datetime.now(timezone.utc):
-        return fail("That reset link has expired or has already been used.", 410,
-                    code="reset_invalid")
+        return fail(
+            "That link is no longer valid. If you asked more than once, only the "
+            "newest email works -- open the most recent one. Otherwise ask for a "
+            "fresh link below.",
+            410, code="reset_invalid",
+        )
 
     # Enough to reassure someone they are resetting the right account,
     # not enough to be worth harvesting.
@@ -373,8 +377,17 @@ def reset_password():
         )
         row = cur.fetchone()
         if not row:
-            return fail("That reset link has expired or has already been used.", 410,
-                        code="reset_invalid")
+            # Three reasons land here and the wording has to cover all of
+            # them: expired, already used, or superseded by a newer
+            # request. The last is the common one -- a slow email gets
+            # asked for again, and then the older message is the one in
+            # front of you.
+            return fail(
+                "That link is no longer valid. If you asked more than once, only the "
+                "newest email works -- open the most recent one. Otherwise ask for a "
+                "fresh link below.",
+                410, code="reset_invalid",
+            )
 
         cur.execute("update password_resets set used_at = now() where id = %s", (row["id"],))
         cur.execute("update users set password_hash = %s where id = %s",
