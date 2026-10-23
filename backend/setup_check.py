@@ -224,7 +224,39 @@ if sb_url and sb_key:
     if "YOUR-PROJECT" in sb_url:
         warn("SUPABASE_URL still has placeholder text", "Image uploads will not work.")
     else:
-        good("Supabase Storage configured (image uploads enabled)")
+        # Keys present is not the same as uploads working. This used to
+        # stop here and report "image uploads enabled", which was true of
+        # the configuration and false of the shop: the bucket had never
+        # been created, every upload failed, and the one place that
+        # should have caught it said everything was fine.
+        sb_bucket = os.getenv("SUPABASE_BUCKET", "zion-media").strip() or "zion-media"
+        try:
+            import requests as _rq
+            _r = _rq.get(
+                f"{sb_url.rstrip('/')}/storage/v1/bucket",
+                headers={"Authorization": f"Bearer {sb_key}", "apikey": sb_key},
+                timeout=15,
+            )
+            if not _r.ok:
+                warn(f"storage reachable but it refused the key ({_r.status_code})",
+                     "Check SUPABASE_SERVICE_KEY is the service_role key, not the anon key.")
+            else:
+                _names = [b.get("name") for b in _r.json()]
+                _match = next((b for b in _r.json() if b.get("name") == sb_bucket), None)
+                if _match is None:
+                    fix(f"the '{sb_bucket}' storage bucket does not exist",
+                        "Every image upload from the admin panel will fail. "
+                        "Create it with:  python seed.py --bucket   "
+                        f"(buckets that do exist: {', '.join(_names) or 'none'})")
+                elif not _match.get("public"):
+                    warn(f"the '{sb_bucket}' bucket is private",
+                         "Uploads will succeed but the images will not load on the "
+                         "storefront. Make it public in Supabase > Storage.")
+                else:
+                    good(f"Supabase Storage ready (bucket '{sb_bucket}', public)")
+        except Exception as exc:
+            warn(f"could not check the storage bucket: {exc}",
+                 "Uploads may still work. Re-run this when the network settles.")
 else:
     warn("Supabase Storage not configured",
          "Image fields will accept URLs but you cannot upload files from the admin panel. "

@@ -4,6 +4,7 @@ Set up the database.
     python seed.py            run migrations, then load the seed data
     python seed.py --migrate  migrations only
     python seed.py --admin    create or reset the admin account
+    python seed.py --bucket   create the Supabase Storage bucket for uploads
     python seed.py --reset    DROP every table first, then rebuild
 
 Every step is safe to re-run: migrations use "if not exists", seed data is
@@ -131,6 +132,66 @@ def make_admin():
     print("  Admin panel http://localhost:5173/admin")
 
 
+
+def make_bucket():
+    """
+    Create the storage bucket the admin panel uploads into.
+
+    Separate from the SQL migrations because it is not in the database:
+    Supabase Storage is its own service with its own API, which is
+    exactly why it got missed -- the schema was applied, the keys were
+    set, setup_check said storage was configured, and every upload still
+    failed because the bucket had never been made.
+
+    Safe to re-run: an existing bucket is reported, not recreated.
+    """
+    import requests
+
+    if not (Config.SUPABASE_URL and Config.SUPABASE_SERVICE_KEY):
+        print("  SUPABASE_URL and SUPABASE_SERVICE_KEY are not set -- nothing to do.")
+        print("  Image fields will still accept pasted URLs.")
+        return
+
+    base = Config.SUPABASE_URL.rstrip("/")
+    name = Config.SUPABASE_BUCKET
+    headers = {
+        "Authorization": f"Bearer {Config.SUPABASE_SERVICE_KEY}",
+        "apikey": Config.SUPABASE_SERVICE_KEY,
+        "Content-Type": "application/json",
+    }
+
+    existing = requests.get(f"{base}/storage/v1/bucket", headers=headers, timeout=20)
+    if not existing.ok:
+        print(f"  Storage refused the key ({existing.status_code}). Is it the service_role key?")
+        return
+    if any(b.get("name") == name for b in existing.json()):
+        print(f"  Bucket '{name}' already exists.")
+        return
+
+    res = requests.post(
+        f"{base}/storage/v1/bucket",
+        headers=headers,
+        json={
+            "name": name,
+            "id": name,
+            # Public because the storefront loads these straight from an
+            # <img src>; a signed URL would expire mid-page.
+            "public": True,
+            # Mirrors MAX_BYTES in media_controller, so the limit is not
+            # declared in two places that can drift.
+            "file_size_limit": 8 * 1024 * 1024,
+            "allowed_mime_types": [
+                "image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml",
+            ],
+        },
+        timeout=25,
+    )
+    if res.ok:
+        print(f"  Created bucket '{name}' (public, 8 MB limit).")
+    else:
+        print(f"  Could not create '{name}': {res.status_code} {res.text[:160]}")
+
+
 def main():
     args = set(sys.argv[1:])
     Config.validate()
@@ -146,10 +207,13 @@ def main():
             migrate()
         elif "--admin" in args:
             make_admin()
+        elif "--bucket" in args:
+            make_bucket()
         else:
             migrate()
             seed()
             make_admin()
+            make_bucket()
 
         counts = db.query_one(
             """select (select count(*) from products) as products,
