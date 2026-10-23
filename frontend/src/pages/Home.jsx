@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import Seo, { faqSchema } from '../components/Seo'
 import { canonical } from '../lib/site'
 import ProductDetailPanel from '../components/ProductDetailPanel'
-import { TEAS, SETS, FAQS } from '../data/catalog'
-import { useCart, useSettings } from '../context/StoreProvider'
+import { FAQS } from '../data/catalog'
+import { useCatalog, useCart, useSettings } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
 import Img, { preloadSrc } from '../components/Img'
 
@@ -59,6 +59,9 @@ export default function Home() {
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' })
   }, [openSlug])
+
+  // From the database when it answers, the bundled copy until then.
+  const { teas: TEAS, sets: SETS } = useCatalog()
 
   const cols = useColumns()
   const all = [...TEAS, ...SETS]

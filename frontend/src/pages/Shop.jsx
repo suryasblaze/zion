@@ -2,8 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Seo from '../components/Seo'
 import { canonical } from '../lib/site'
-import { TEAS, SETS } from '../data/catalog'
-import { useCart } from '../context/StoreProvider'
+import { useCatalog, useCart } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
 import Img from '../components/Img'
 
@@ -23,6 +22,8 @@ export default function Shop() {
   const [sort, setSort] = useState('featured')
   const filter = params.get('filter') || (params.get('category') === 'gift-sets' ? 'sets' : 'all')
   const { add } = useCart()
+  // From the database when it answers, the bundled copy until then.
+  const { teas: TEAS, sets: SETS } = useCatalog()
 
   const items = useMemo(() => {
     let list = [...TEAS, ...SETS]
@@ -34,7 +35,7 @@ export default function Shop() {
     if (sort === 'low') list = [...list].sort((a, b) => a.price - b.price)
     if (sort === 'high') list = [...list].sort((a, b) => b.price - a.price)
     return list
-  }, [filter, sort])
+  }, [filter, sort, TEAS, SETS])
 
   return (
     <>

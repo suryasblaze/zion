@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react'
 import { api, tokens, visitorToken } from '../lib/api'
-import { PRODUCTS } from '../data/catalog'
+import { PRODUCTS, TEAS, SETS } from '../data/catalog'
+import { splitCatalogue } from '../data/fromApi'
 
 /* ===================================================================== */
 /* Settings + live theme                                                 */
@@ -237,17 +238,46 @@ const CatalogCtx = createContext(null)
 export function CatalogProvider({ children }) {
   const [products, setProducts] = useState(PRODUCTS)
 
+  /**
+   * teas/sets are what the pages render.
+   *
+   * They start as the bundled copy so the shop paints immediately and
+   * still works if the API is unreachable, then switch to the database
+   * the moment it answers. Until this existed the pages imported the
+   * bundled copy directly and never switched, so nothing an admin
+   * changed -- image, price, name -- ever reached a customer.
+   *
+   * `live` says which is on screen. The admin panel uses it to warn that
+   * edits are not visible yet, rather than leaving someone to wonder why
+   * saving did nothing.
+   */
+  const [teas, setTeas] = useState(TEAS)
+  const [sets, setSets] = useState(SETS)
+  const [live, setLive] = useState(false)
+
   useEffect(() => {
     api
       .products('', null)
       .then((res) => {
         const list = res?.products || res
-        if (Array.isArray(list) && list.length) setProducts(list)
+        if (!Array.isArray(list) || !list.length) return
+        setProducts(list)
+
+        const split = splitCatalogue(list)
+        if (split) {
+          setTeas(split.teas)
+          setSets(split.sets)
+          setLive(true)
+        }
       })
       .catch(() => {})
   }, [])
 
-  return <CatalogCtx.Provider value={{ products }}>{children}</CatalogCtx.Provider>
+  return (
+    <CatalogCtx.Provider value={{ products, teas, sets, live }}>
+      {children}
+    </CatalogCtx.Provider>
+  )
 }
 
 export const useCatalog = () => useContext(CatalogCtx)

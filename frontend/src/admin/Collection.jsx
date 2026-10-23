@@ -288,7 +288,7 @@ function normalise(row, schema) {
     if (f.type === 'json' && typeof out[f.key] !== 'string') {
       out[f.key] = JSON.stringify(out[f.key] ?? (f.key === 'seo' ? {} : {}), null, 2)
     }
-    if ((f.type === 'list' || f.type === 'benefits') && !Array.isArray(out[f.key])) {
+    if ((f.type === 'list' || f.type === 'benefits' || f.type === 'gallery') && !Array.isArray(out[f.key])) {
       out[f.key] = []
     }
     if (out[f.key] == null && f.type === 'toggle') out[f.key] = false
@@ -435,6 +435,9 @@ function Field({ field: f, value, onChange, refs }) {
       </div>
     )
 
+  if (f.type === 'gallery')
+    return <GalleryField id={id} f={f} value={value} onChange={onChange} label={label} hint={hint} />
+
   return (
     <div>
       {label}
@@ -453,6 +456,103 @@ function Field({ field: f, value, onChange, refs }) {
           className={`field ${f.type === 'number' || f.type === 'money' ? 'nums' : ''}`}
         />
       </div>
+      {hint}
+    </div>
+  )
+}
+
+/**
+ * Several images for one product.
+ *
+ * The products table has had a `gallery` column since the first
+ * migration and it has been an empty array on every row, because
+ * nothing could write to it: the form only knew how to render one
+ * image. Pictures are how tea gets sold, so one was never going to be
+ * enough.
+ *
+ * The first image is the one cards use, which is worth saying out loud
+ * -- it is not obvious from a grid, and it is the difference between a
+ * neat square crop and a cropped-off label.
+ */
+function GalleryField({ f, value = [], onChange, label, hint }) {
+  const items = Array.isArray(value) ? value : []
+
+  const move = (from, to) => {
+    if (to < 0 || to >= items.length) return
+    const next = [...items]
+    const [moved] = next.splice(from, 1)
+    next.splice(to, 0, moved)
+    onChange(next)
+  }
+
+  return (
+    <div>
+      {label}
+
+      <div className="grid gap-2">
+        {items.map((url, i) => (
+          <div key={`${url}-${i}`} className="flex items-center gap-2 border border-line p-2">
+            <img
+              src={url}
+              alt=""
+              className="h-14 w-14 shrink-0 border border-line object-cover"
+              onError={(e) => { e.currentTarget.style.opacity = '0.25' }}
+            />
+            <div className="min-w-0 flex-1">
+              <input
+                value={url}
+                onChange={(e) => {
+                  const next = [...items]
+                  next[i] = e.target.value
+                  onChange(next)
+                }}
+                className="field py-2 text-tiny"
+              />
+              {i === 0 && (
+                <p className="mt-1 text-micro uppercase tracking-wide text-gold">
+                  Used on cards
+                </p>
+              )}
+            </div>
+            <div className="flex shrink-0 flex-col">
+              <button
+                type="button" onClick={() => move(i, i - 1)} disabled={i === 0}
+                className="px-2 text-tiny text-soft disabled:opacity-25 hover:text-ink"
+                aria-label="Move up"
+              >
+                ▲
+              </button>
+              <button
+                type="button" onClick={() => move(i, i + 1)} disabled={i === items.length - 1}
+                className="px-2 text-tiny text-soft disabled:opacity-25 hover:text-ink"
+                aria-label="Move down"
+              >
+                ▼
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => onChange(items.filter((_, j) => j !== i))}
+              className="shrink-0 self-stretch border border-line px-3 text-soft hover:border-[#B4472F] hover:text-[#8F3623]"
+              aria-label="Remove"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Upload straight into the list: picking a file appends it rather
+          than replacing anything, which is what "add another photo"
+          means. */}
+      <div className="mt-2">
+        <MediaPicker
+          value=""
+          onChange={(url) => url && onChange([...items, url])}
+          folder={f.folder || 'products'}
+        />
+      </div>
+
       {hint}
     </div>
   )

@@ -2,24 +2,35 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Seo, { productSchema, faqSchema } from '../components/Seo'
 import { canonical } from '../lib/site'
-import { bySlug, TEAS, FAQS } from '../data/catalog'
-import { useCart } from '../context/StoreProvider'
+import { bySlug, FAQS } from '../data/catalog'
+import { useCatalog, useCart } from '../context/StoreProvider'
 import { accentStyle, inr, discountPct } from '../lib/format'
 import NotFound from './NotFound'
 import Img from '../components/Img'
 
 export default function Product() {
   const { slug } = useParams()
-  const product = bySlug(slug)
   const [sizeIdx, setSizeIdx] = useState(0)
   const [qty, setQty] = useState(1)
+  const [frame, setFrame] = useState(0)
   const { add } = useCart()
+  const { teas, sets } = useCatalog()
+
+  // The live row wins; bySlug is the bundled copy, kept so a direct link
+  // still renders while the catalogue request is in flight.
+  const product =
+    [...teas, ...sets].find((p) => p.slug === slug) || bySlug(slug)
 
   if (!product) return <NotFound />
 
   const size = product.sizes[sizeIdx]
   const off = discountPct(size.price, size.mrp)
-  const others = TEAS.filter((t) => t.slug !== product.slug).slice(0, 4)
+  const others = teas.filter((t) => t.slug !== product.slug).slice(0, 4)
+
+  // Hero first, then the gallery, de-duplicated: an admin who also adds
+  // the hero to the gallery should not get the same photo twice.
+  const frames = [...new Set([product.image, ...(product.gallery || [])].filter(Boolean))]
+  const shown = frames[frame] || product.image
 
   return (
     <div style={accentStyle(product)}>
@@ -43,8 +54,34 @@ export default function Product() {
         <figure className="relative m-0">
           <div className="absolute -inset-3 -z-10" style={{ background: 'rgb(var(--c-accent) / 0.07)' }} />
           <div className="border border-line bg-paper p-3">
-            <Img src={product.image} alt={`ZION ${product.name} herbal tea`} className="w-full" />
+            <Img
+              src={shown}
+              alt={`ZION ${product.name} herbal tea`}
+              className="w-full"
+              priority
+            />
           </div>
+
+          {/* Only when there is more than one: a lone thumbnail under a
+              picture of the same thing is furniture. */}
+          {frames.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-3">
+              {frames.map((src, i) => (
+                <button
+                  key={`${src}-${i}`}
+                  type="button"
+                  onClick={() => setFrame(i)}
+                  aria-label={`Photo ${i + 1} of ${frames.length}`}
+                  aria-current={i === frame}
+                  className={`h-20 w-20 overflow-hidden border transition-colors ${
+                    i === frame ? 'border-gold' : 'border-line hover:border-soft'
+                  }`}
+                >
+                  <Img src={src} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </figure>
 
         <div>

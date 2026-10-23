@@ -11,7 +11,13 @@ PRODUCT_COLUMNS = """
   p.short_desc, p.description, p.story, p.accent_color, p.accent_soft,
   p.hero_image, p.gallery, p.benefits, p.ingredients, p.brewing, p.badges,
   p.is_caffeine_free, p.is_featured, p.rating_avg, p.rating_count, p.seo,
-  p.sort_order, c.slug as category_slug, c.name as category_name
+  p.sort_order,
+  -- Added by 005 and then left out of here, so four of the detail
+  -- panel's sections existed in the database and reached nobody: the
+  -- storefront fell back to its bundled copy and looked fine, which is
+  -- why it went unnoticed.
+  p.nutrition, p.taste_aroma, p.origin, p.why_love,
+  c.slug as category_slug, c.name as category_name
 """
 
 VARIANTS = """

@@ -39,6 +39,9 @@ export const SCHEMAS = {
         hint: 'The brewed colour. Drives the page theme for this tea.' },
       { key: 'accent_soft', label: 'Lighter accent', type: 'color' },
       { key: 'hero_image', label: 'Main image', type: 'image' },
+      { key: 'gallery', label: 'More photos', type: 'gallery', folder: 'products',
+        hint: 'Shown on the product page under the main image. The first one is '
+              + 'also the square crop used on cards.' },
       { key: 'benefits', label: 'Benefits', type: 'benefits',
         hint: 'Shown on the product page. Traditional uses, not medical claims.' },
       { key: 'ingredients', label: 'Ingredients', type: 'list' },
