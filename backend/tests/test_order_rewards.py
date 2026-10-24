@@ -86,16 +86,44 @@ def balance(user_id):
     return db.scalar("select wallet_balance from users where id = %s", (user_id,)) or 0
 
 
-def cleanup(a, b, c):
-    for uid in (a, b, c):
-        if uid:
-            db.execute("delete from orders where user_id = %s", (uid,))
-    db.execute("delete from users where email like %s", (f"{TAG}%",))
+def cleanup(*user_ids):
+    """
+    Remove everything this run created.
+
+    Children first and one statement at a time, rather than leaning on
+    cascades. A single delete that walks orders, items, events, wallet
+    rows and the referrals graph is slow enough over a pooled connection
+    to hit the server's statement timeout -- and a timeout mid-delete
+    leaves the transaction open, holding row locks that outlive the
+    process. That happened, and the locks sat there until someone killed
+    the session by hand.
+
+    Nothing here is allowed to raise: a test that cannot tidy up should
+    say so and still let the pool close.
+    """
+    for uid in user_ids:
+        if not uid:
+            continue
+        for sql in (
+            "delete from wallet_transactions where user_id = %s",
+            "delete from order_rewards where user_id = %s",
+            "delete from referrals where referrer_id = %s or referee_id = %s",
+            "delete from order_items where order_id in (select id from orders where user_id = %s)",
+            "delete from order_events where order_id in (select id from orders where user_id = %s)",
+            "delete from orders where user_id = %s",
+            "delete from users where id = %s",
+        ):
+            params = (uid, uid) if sql.count("%s") == 2 else (uid,)
+            try:
+                db.execute(sql, params)
+            except Exception as exc:
+                print(f"  (cleanup) {sql.split()[2]}: {str(exc)[:60]}")
 
 
 def main():
     db.init_pool()
     a = bb = c = None
+    extra = []
 
     # Set known rates for the duration, then put back whatever was there.
     before = {
@@ -228,8 +256,7 @@ def main():
             "select count(*) from order_rewards where order_id = %s and kind = 'commission'",
             (o5,)), 0)
 
-        db.execute("delete from orders where user_id = %s", (d,))
-        db.execute("delete from users where id = %s", (d,))
+        extra.append(d)
 
     finally:
         settings_service.set_many({k: v for k, v in before.items() if v is not None})

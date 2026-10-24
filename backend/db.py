@@ -17,6 +17,12 @@ from config import Config
 _pool = None
 
 
+def _configure(conn):
+    """Runs once per new pooled connection."""
+    with conn.cursor() as cur:
+        cur.execute("set idle_in_transaction_session_timeout = '30s'")
+
+
 def init_pool():
     global _pool
     if _pool is None:
@@ -24,7 +30,28 @@ def init_pool():
             conninfo=Config.DATABASE_URL,
             min_size=1,
             max_size=10,
-            kwargs={"row_factory": dict_row, "autocommit": True},
+            kwargs={
+                "row_factory": dict_row,
+                "autocommit": True,
+                # Release a transaction that stops making progress.
+                #
+                # The database has this disabled, so a worker killed
+                # between BEGIN and COMMIT leaves a session holding row
+                # locks until something kills it by hand -- a refund,
+                # say, taken out by a deploy mid-flight, blocking every
+                # later write to that customer. A test run did exactly
+                # that and the locks outlived the process by ten
+                # minutes.
+                #
+                # Thirty seconds is far longer than any transaction here
+                # takes; the longest holds a row lock for one order.
+                #
+                # Applied per session in _configure below rather than as
+                # a connection option -- Supabase's pooler drops the
+                # options string, so setting it here looks like it
+                # worked and silently does nothing.
+            },
+            configure=_configure,
             open=True,
         )
     return _pool
