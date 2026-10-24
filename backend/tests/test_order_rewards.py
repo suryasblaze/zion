@@ -13,6 +13,7 @@ arrived twice, paying a grandparent because someone walked the chain one
 hop too far, and a refund that cannot claw money back because it was
 already spent. Those are what the checks below are about.
 """
+import json
 import os
 import sys
 import uuid
@@ -40,7 +41,14 @@ def head(title):
     print(f"\n{title}\n{'-' * len(title)}")
 
 
-def make_user(name, referred_by=None):
+def make_user(name, referred_by=None, flags=None):
+    """
+    Creates the account and, when referred, the referrals row.
+
+    Commission reads `referrals` rather than users.referred_by, because
+    that is where the fraud flags live -- so a test that only set
+    referred_by would pass while the real signup path was being blocked.
+    """
     row = db.query_one(
         """insert into users (email, password_hash, full_name, role, referral_code, referred_by)
            values (%s, %s, %s, 'customer', %s, %s)
@@ -48,7 +56,17 @@ def make_user(name, referred_by=None):
         (f"{TAG}-{name}@example.invalid", "x" * 40, f"Test {name}",
          f"{TAG[-6:].upper()}{name}", referred_by),
     )
-    return row["id"]
+    uid = row["id"]
+    if referred_by:
+        db.execute(
+            """insert into referrals
+                 (referrer_id, referee_id, code, status, referee_discount_type,
+                  referee_discount_value, fraud_flags)
+               values (%s, %s, %s, 'rewarded', 'percent', 0, %s::jsonb)""",
+            (referred_by, uid, f"{TAG[-6:].upper()}{name}",
+             json.dumps(flags or [])),
+        )
+    return uid
 
 
 def make_order(user_id, subtotal, number):
@@ -83,7 +101,8 @@ def main():
     before = {
         k: settings_service.get(k)
         for k in ("referral.commission_percent", "referral.self_cashback_percent",
-                  "referral.reward_min_order", "referral.qualify_on", "referral.enabled")
+                  "referral.reward_min_order", "referral.qualify_on", "referral.enabled",
+                  "referral.auto_approve_flagged")
     }
     try:
         settings_service.set_many({
@@ -186,6 +205,31 @@ def main():
         small = referral_service.on_order_rewards(o4)
         check("small order skipped", small.get("reason"), "below_minimum")
         check("no points moved", balance(bb), b6)
+
+        # ----------------------------------------------------------------
+        head("A flagged referral earns no commission")
+        settings_service.set_many({"referral.commission_percent": 2,
+                                   "referral.self_cashback_percent": 5,
+                                   "referral.reward_min_order": 0,
+                                   "referral.auto_approve_flagged": False})
+        d = make_user("d", referred_by=a, flags=["same_device"])
+        o5 = make_order(d, 1000, f"{TAG}-5")
+        db.execute("update orders set payment_status = 'paid' where id = %s", (o5,))
+
+        a4, d0 = balance(a), balance(d)
+        res5 = referral_service.on_order_rewards(o5)
+        held = [p for p in res5["paid"] if p.get("reason") == "held_for_review"]
+
+        check("commission held for review", len(held), 1)
+        check("referrer earned nothing", balance(a) - a4, 0)
+        check("buyer still got their cashback", balance(d) - d0,
+              wallet_service.rupees_to_points(50.0))
+        check("no commission row written", db.scalar(
+            "select count(*) from order_rewards where order_id = %s and kind = 'commission'",
+            (o5,)), 0)
+
+        db.execute("delete from orders where user_id = %s", (d,))
+        db.execute("delete from users where id = %s", (d,))
 
     finally:
         settings_service.set_many({k: v for k, v in before.items() if v is not None})

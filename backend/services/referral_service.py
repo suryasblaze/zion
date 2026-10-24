@@ -660,11 +660,40 @@ def on_order_rewards(order_id, force=False):
         pay(order["user_id"], "self_cashback", pct_self)
 
         # Their referrer's share. One hop, deliberately.
-        cur.execute("select referred_by from users where id = %s", (order["user_id"],))
-        row = cur.fetchone()
-        referrer_id = row["referred_by"] if row else None
-        if referrer_id and str(referrer_id) != str(order["user_id"]):
-            pay(referrer_id, "commission", pct_comm)
+        #
+        # Read from `referrals`, not from users.referred_by. Both hold
+        # the same relationship, but only the referrals row carries
+        # whether it passed the fraud checks -- the flags raised at
+        # signup for a shared device, IP, email or phone.
+        #
+        # The shortcut would have paid commission on a relationship the
+        # one-off reward is still holding for review: make a second
+        # account on the same device, refer yourself, and collect a
+        # percentage of your own spending for as long as the account
+        # lives, with cashback on top. The single payment that needs
+        # review got it; the recurring one would not have.
+        #
+        # rejected and reversed are excluded because an admin has said
+        # no. pending and qualified are allowed: this very order is
+        # often what qualifies the referral, and on_order_paid runs
+        # immediately before this does.
+        cur.execute(
+            """select referrer_id, fraud_flags
+                 from referrals
+                where referee_id = %s
+                  and status in ('pending', 'qualified', 'rewarded')
+                limit 1""",
+            (order["user_id"],),
+        )
+        link = cur.fetchone()
+
+        if link:
+            flags = link["fraud_flags"] or []
+            if flags and not cfg["auto_approve_flagged"]:
+                paid.append({"kind": "commission", "paid": False,
+                             "reason": "held_for_review", "flags": flags})
+            elif str(link["referrer_id"]) != str(order["user_id"]):
+                pay(link["referrer_id"], "commission", pct_comm)
 
     return {"paid": paid}
 
