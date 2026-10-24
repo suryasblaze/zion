@@ -15,6 +15,17 @@ export default function Refer() {
   const coinName = get('wallet.coin_name', 'ZION Coins')
   const rate = Number(get('wallet.coins_per_rupee', 10))
 
+  // Describe whichever rewards are actually switched on. The copy used
+  // to state a one-off bonus as fact; when the programme moved to a
+  // share of every order the page went on promising the old thing,
+  // which is the sort of wrong that reads as being short-changed.
+  // From public settings, not from `stats` -- stats only loads for a
+  // signed-in user, and the hero states the rate to visitors who are
+  // not. Reading it from there showed them the old promise.
+  const commissionPct = Number(get('referral.commission_percent', 0))
+  const cashbackPct = Number(get('referral.self_cashback_percent', 0))
+  const recurring = commissionPct > 0
+
   useEffect(() => {
     if (!user) return
     api.myReferrals().then(setStats).catch(() => setStats(null))
@@ -59,8 +70,18 @@ export default function Refer() {
           <p className="script mb-1">Refer and earn</p>
           <h1 className="max-w-[20ch] text-d1">Send a friend a pot, keep the coins</h1>
           <p className="mt-5 max-w-[54ch] text-lede text-soft">
-            Every account gets its own link. Your friend saves on their first order, and you collect{' '}
-            {coinName} that come straight off your next one — {rate} coins to ₹1.
+            {recurring ? (
+              <>
+                Every account gets its own link. Your friend saves on their first order — and
+                from then on you earn <span className="text-gold">{commissionPct}% of every
+                order they place</span>, as {coinName} that come straight off your own.
+              </>
+            ) : (
+              <>
+                Every account gets its own link. Your friend saves on their first order, and you
+                collect {coinName} that come straight off your next one — {rate} coins to ₹1.
+              </>
+            )}
           </p>
         </div>
       </header>
@@ -172,7 +193,11 @@ export default function Refer() {
               ['Share your link', 'It is in your account from the moment you register. Every click is counted.'],
               ['Your friend registers', 'The link is remembered for 30 days, so they can think about it.'],
               ['They order and save', `Their first order gets ${stats?.discount_label || 'a discount'}, applied automatically at checkout.`],
-              [`You collect ${coinName}`, `Credited once their order is paid. Spend them at ${rate} coins to ₹1.`],
+              recurring
+                ? [`You earn ${commissionPct}% of every order`,
+                   `Not just the first — every order they ever place, credited once it is paid. Spend the coins at ${rate} to ₹1.`]
+                : [`You collect ${coinName}`,
+                   `Credited once their order is paid. Spend them at ${rate} coins to ₹1.`],
             ].map(([title, body], i) => (
               <li key={title}>
                 <span className="nums font-display text-[1.1rem] text-gold">0{i + 1}</span>
@@ -182,14 +207,28 @@ export default function Refer() {
             ))}
           </ol>
 
+          {cashbackPct > 0 && (
+            <div className="mt-10 border-l-2 border-gold bg-gold/[0.06] px-5 py-4">
+              <p className="text-[0.95rem]">
+                And on your own orders, too — you earn{' '}
+                <span className="text-gold">{cashbackPct}% back as {coinName}</span> on
+                everything you buy, whether anyone referred you or not.
+              </p>
+            </div>
+          )}
+
           <div className="mt-12 max-w-[70ch] border-t border-line pt-6 text-tiny text-soft">
             <p className="mb-2 text-ink">The fine print, in plain words</p>
             <p>
-              One reward per friend, on their first paid order only. You cannot refer yourself —
-              accounts sharing an email, phone, device or network are held for review. If an order
-              is refunded, the coins for it are taken back. Coins expire after a year of no
-              activity, and the shop can change the rates at any time; changes never alter a reward
-              you have already earned.
+              {recurring
+                ? 'Commission is paid on each order once it is paid for, and only on orders placed by people who used your link.'
+                : 'One reward per friend, on their first paid order only.'}{' '}
+              You cannot refer yourself — accounts sharing an email, phone, device or network are
+              held for review, and earn nothing while they are. Rewards reach the person who
+              referred and nobody above them: if your friend refers someone, that reward is
+              theirs, not yours. If an order is refunded, the coins for it are taken back. Coins
+              expire after a year of no activity, and the shop can change the rates at any time;
+              changes never alter what you have already earned.
             </p>
           </div>
         </div>

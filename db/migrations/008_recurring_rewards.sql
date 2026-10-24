@@ -31,7 +31,9 @@ select * from (values
    || 'long as the account exists. 0 turns it off. This is a permanent '
    || 'share of revenue, not a one-off: at 2%, a referee spending '
    || 'Rs 1,000 a month earns their referrer Rs 240 a year.',
-   'number', '[]'::jsonb, 0, 20, false, 20),
+   -- Public: the Refer page states the rate as a promise, and a
+   -- visitor who is not signed in has to be able to read it.
+   'number', '[]'::jsonb, 0, 20, true, 20),
 
   ('referral.self_cashback_percent',
    '0'::jsonb, 'number', 'referral',
@@ -40,7 +42,7 @@ select * from (values
    || 'off. Stacks with coin redemption, so check the redemption cap '
    || 'before raising it -- cashback earned on one order can come '
    || 'straight off the next.',
-   'number', '[]'::jsonb, 0, 20, false, 21),
+   'number', '[]'::jsonb, 0, 20, true, 21),
 
   ('referral.reward_min_order',
    '0'::jsonb, 'number', 'referral',

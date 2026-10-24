@@ -545,9 +545,18 @@ def stats_for(user_id):
         "signups": int(row.get("signups") or 0),
         "conversions": int(row.get("conversions") or 0),
         "points_earned": int(row.get("points_earned") or 0),
+        # Split out, because "where did this come from" is the first
+        # question anyone asks about a balance.
+        "bonus_points": int(row.get("bonus_points") or 0),
+        "commission_points": int(row.get("commission_points") or 0),
         "signup_rate_pct": float(row.get("signup_rate_pct") or 0),
         "discount_label": describe_discount(cfg),
         "reward_points": cfg["referrer_points"],
+        # The page describes whichever of these is switched on, rather
+        # than a model someone wrote into the copy months ago.
+        "commission_percent": cfg["commission_percent"],
+        "self_cashback_percent": cfg["self_cashback_percent"],
+        "reward_min_order": cfg["reward_min_order"],
         "share_message": cfg["share_message"],
         "enabled": cfg["enabled"],
         "referrals": recent,
