@@ -552,3 +552,158 @@ def stats_for(user_id):
         "enabled": cfg["enabled"],
         "referrals": recent,
     }
+
+
+# =====================================================================
+# Per-order rewards
+#
+# The programme above pays a referrer once, when their referee's first
+# order qualifies. These pay on every order: a share to the buyer, and a
+# share to whoever referred them.
+#
+# One level, and that is structural rather than a rule. Commission reads
+# users.referred_by, which holds the direct referrer only. There is
+# nowhere in this function to find a grandparent, so none can be paid by
+# accident later.
+# =====================================================================
+
+def _reward_base(order):
+    """
+    What the percentages apply to.
+
+    Subtotal, before discounts and before shipping. Paying commission on
+    a discounted total means a coupon quietly cuts the referrer's share
+    too, and paying it on shipping means rewarding a courier.
+    """
+    return float(order.get("subtotal") or 0)
+
+
+def on_order_rewards(order_id, force=False):
+    """
+    Pay cashback and commission for one order. Safe to call repeatedly.
+
+    Called from the same places as on_order_paid -- the payment webhook
+    and an admin marking an order paid or delivered -- so it has to
+    survive being called two or three times for the same order. The
+    unique (order_id, kind) index is what makes that safe; this function
+    just stops early when it finds the row already there.
+    """
+    cfg = settings_service.referral_config()
+    if not cfg["enabled"]:
+        return {"paid": [], "reason": "programme_disabled"}
+
+    pct_self = float(cfg["self_cashback_percent"] or 0)
+    pct_comm = float(cfg["commission_percent"] or 0)
+    if pct_self <= 0 and pct_comm <= 0:
+        return {"paid": [], "reason": "rates_are_zero"}
+
+    paid = []
+
+    with db.transaction() as cur:
+        cur.execute(
+            """select id, user_id, payment_status, status, subtotal, order_number
+                 from orders where id = %s for update""",
+            (order_id,),
+        )
+        order = cur.fetchone()
+        if not order or not order["user_id"]:
+            return {"paid": [], "reason": "order_not_found"}
+
+        # The same gate the one-off reward uses, so both halves of the
+        # programme agree on when an order counts.
+        if not force:
+            if cfg["qualify_on"] == "order_delivered" and order["status"] != "delivered":
+                return {"paid": [], "reason": "awaiting_delivery"}
+            if cfg["qualify_on"] == "order_paid" and order["payment_status"] != "paid":
+                return {"paid": [], "reason": "not_paid"}
+
+        base = _reward_base(order)
+        if base < float(cfg["reward_min_order"] or 0):
+            return {"paid": [], "reason": "below_minimum"}
+
+        def pay(user_id, kind, pct):
+            if pct <= 0 or not user_id:
+                return
+            money = round(base * pct / 100.0, 2)
+            # Not `cfg` -- that is the referral config; the conversion rate
+            # lives in the wallet config, which this fetches for itself.
+            points = wallet_service.rupees_to_points(money)
+            if points <= 0:
+                return
+
+            # Claim the slot first. A second caller loses the insert and
+            # moves no points, which is the whole point of doing it in
+            # this order.
+            cur.execute(
+                """insert into order_rewards
+                     (order_id, user_id, kind, rate_percent, base_amount, points, money_value)
+                   values (%s, %s, %s, %s, %s, %s, %s)
+                   on conflict (order_id, kind) do nothing
+                   returning id""",
+                (order_id, user_id, kind, pct, base, points, money),
+            )
+            if not cur.fetchone():
+                return
+
+            wallet_service.move(
+                cur, user_id, points, kind,
+                reference_type="order", reference_id=order_id,
+                idempotency_key=f"{kind}:{order_id}",
+                money_value=money,
+                note=f"{'Cashback on' if kind == 'self_cashback' else 'Commission from'} "
+                     f"order {order['order_number']}",
+            )
+            paid.append({"kind": kind, "user_id": str(user_id),
+                         "points": points, "percent": pct})
+
+        # The buyer's own cashback.
+        pay(order["user_id"], "self_cashback", pct_self)
+
+        # Their referrer's share. One hop, deliberately.
+        cur.execute("select referred_by from users where id = %s", (order["user_id"],))
+        row = cur.fetchone()
+        referrer_id = row["referred_by"] if row else None
+        if referrer_id and str(referrer_id) != str(order["user_id"]):
+            pay(referrer_id, "commission", pct_comm)
+
+    return {"paid": paid}
+
+
+def on_order_rewards_reversed(order_id, reason="Order refunded"):
+    """
+    Take back what this order paid.
+
+    Reverses the recorded amounts rather than recomputing them: the rates
+    may have changed since, and what was given is what should be taken.
+
+    A balance can be short -- the coins may already have been spent --
+    so each reversal is attempted on its own and a failure is recorded
+    rather than raised. One unreversible payment must not block the
+    others, and a refund must not fail because a wallet is empty.
+    """
+    out = []
+    rows = db.query(
+        """select id, user_id, kind, points, money_value
+             from order_rewards
+            where order_id = %s and reversed_at is null""",
+        (order_id,),
+    )
+
+    for r in rows:
+        try:
+            wallet_service.debit(
+                r["user_id"], r["points"], f"{r['kind']}_reversal",
+                reference_type="order", reference_id=order_id,
+                idempotency_key=f"{r['kind']}_reversal:{order_id}",
+                money_value=r["money_value"],
+                note=reason,
+            )
+            db.execute("update order_rewards set reversed_at = now() where id = %s", (r["id"],))
+            out.append({"kind": r["kind"], "points": r["points"], "reversed": True})
+        except Exception as exc:
+            # Most often a balance already spent down. Left unreversed so
+            # it is visible rather than silently written off.
+            out.append({"kind": r["kind"], "points": r["points"],
+                        "reversed": False, "error": str(exc)[:120]})
+
+    return out

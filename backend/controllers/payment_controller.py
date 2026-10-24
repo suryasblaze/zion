@@ -65,6 +65,7 @@ def _mark_paid(order_id, payment_ref, note):
         (order_id, note),
     )
     reward = referral_service.on_order_paid(order_id)
+    referral_service.on_order_rewards(order_id)
     return {"order": row, "referral": reward}
 
 
@@ -219,6 +220,7 @@ def webhook():
     if kind.startswith("refund."):
         db.execute("update orders set payment_status = 'refunded' where id = %s", (row["id"],))
         referral_service.on_order_reversed(row["id"], "Payment refunded")
+        referral_service.on_order_rewards_reversed(row["id"], "Payment refunded")
         return ok(message="Refund recorded.")
 
     return ok(message=f"Ignored {kind}.")

@@ -404,8 +404,12 @@ def update_order(order_id):
     reward = None
     if payment_status == "paid" or status == "delivered":
         reward = referral_service.on_order_paid(order_id)
+        # Cashback and commission ride on the same trigger, so an order
+        # cannot qualify for one and not the other.
+        referral_service.on_order_rewards(order_id)
     if payment_status == "refunded" or status in ("cancelled", "refunded"):
         reward = referral_service.on_order_reversed(order_id, "Order cancelled or refunded")
+        referral_service.on_order_rewards_reversed(order_id, "Order cancelled or refunded")
         # Give back any coins the customer spent on it.
         if row["coins_redeemed"] and row["user_id"]:
             try:

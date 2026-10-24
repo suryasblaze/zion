@@ -139,6 +139,11 @@ def referral_config():
         "block_same_device": get_bool("referral.block_same_device", True),
         "auto_approve_flagged": get_bool("referral.auto_approve_flagged", False),
         "share_message": get_str("referral.share_message", ""),
+        # Per-order rewards. Both default to 0, which leaves the shop
+        # behaving exactly as it did before they existed.
+        "commission_percent": get_float("referral.commission_percent", 0),
+        "self_cashback_percent": get_float("referral.self_cashback_percent", 0),
+        "reward_min_order": get_float("referral.reward_min_order", 0),
     }
 
 
