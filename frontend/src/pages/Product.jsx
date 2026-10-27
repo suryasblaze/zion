@@ -7,6 +7,7 @@ import { useCatalog, useCart } from '../context/StoreProvider'
 import { accentStyle, inr, discountPct } from '../lib/format'
 import NotFound from './NotFound'
 import Img from '../components/Img'
+import Reviews from '../components/Reviews'
 
 export default function Product() {
   const { slug } = useParams()
@@ -187,6 +188,11 @@ export default function Product() {
           </div>
         </section>
       )}
+
+      {/* Above "the rest of the six" on purpose: someone deciding on
+          this tea should meet other people's opinion of it before they
+          are offered a different one. */}
+      <Reviews slug={product.slug} productName={product.name} />
 
       <section className="py-20">
         <div className="shell">

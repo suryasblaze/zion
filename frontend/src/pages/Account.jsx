@@ -6,7 +6,7 @@ import { useAuth, useSettings } from '../context/StoreProvider'
 import { inr, num } from '../lib/format'
 import Img from '../components/Img'
 
-const TABS = ['Orders', 'Wallet', 'Referrals', 'Details']
+const TABS = ['Orders', 'Reviews', 'Wallet', 'Referrals', 'Details']
 
 export default function Account() {
   const { user, ready, logout } = useAuth()
@@ -17,6 +17,7 @@ export default function Account() {
   const [wallet, setWallet] = useState(null)
   const [ledger, setLedger] = useState([])
   const [referrals, setReferrals] = useState(null)
+  const [reviewable, setReviewable] = useState(null)
 
   const coinName = get('wallet.coin_name', 'ZION Coins')
   const welcome = location.state?.welcome
@@ -27,6 +28,7 @@ export default function Account() {
     api.wallet().then(setWallet).catch(() => setWallet(null))
     api.walletHistory().then((r) => setLedger(r || [])).catch(() => setLedger([]))
     api.myReferrals().then(setReferrals).catch(() => setReferrals(null))
+    api.reviewable().then(setReviewable).catch(() => setReviewable([]))
   }, [user])
 
   if (!ready) return <div className="shell py-24 text-soft">Loading your account…</div>
@@ -77,6 +79,7 @@ export default function Account() {
       <section className="py-12">
         <div className="shell">
           {tab === 'Orders' && <Orders orders={orders} />}
+          {tab === 'Reviews' && <Reviewable rows={reviewable} />}
           {tab === 'Wallet' && <Wallet wallet={wallet} ledger={ledger} coinName={coinName} />}
           {tab === 'Referrals' && <Referrals stats={referrals} coinName={coinName} />}
           {tab === 'Details' && <Details user={user} />}
@@ -87,6 +90,78 @@ export default function Account() {
 }
 
 /* ------------------------------------------------------------------ */
+/**
+ * What this customer can review.
+ *
+ * The form lives on the product page, which is the right place to write
+ * one and the wrong place to discover that you can. Nobody revisits a
+ * product page after the tea arrives -- they come here, to the orders
+ * they just received. So this lists what is reviewable and sends them
+ * over, rather than duplicating the form.
+ */
+function Reviewable({ rows }) {
+  if (rows === null) return <p className="text-soft">Loading…</p>
+
+  if (!rows.length) {
+    return (
+      <Empty
+        title="Nothing to review yet"
+        body="Once an order has been delivered, the teas in it appear here for you to review."
+      />
+    )
+  }
+
+  const todo = rows.filter((r) => !r.review_id)
+  const done = rows.filter((r) => r.review_id)
+
+  return (
+    <div className="grid gap-10">
+      {todo.length > 0 && (
+        <div>
+          <h2 className="text-d3">Waiting for your verdict</h2>
+          <ul className="mt-5 grid gap-px border-l border-t border-line sm:grid-cols-2">
+            {todo.map((r) => (
+              <li key={r.id} className="flex items-center gap-4 border-b border-r border-line bg-paper p-5">
+                <Img src={r.hero_image} alt="" className="h-16 w-16 shrink-0 border border-line object-cover" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[1.02rem]">{r.name}</h3>
+                  <p className="text-tiny text-soft">Order {r.order_number}</p>
+                </div>
+                <Link
+                  to={`/product/${r.slug}#reviews`}
+                  className="shrink-0 border border-line px-4 py-2 text-tiny transition-colors hover:border-gold hover:text-gold"
+                >
+                  Review
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {done.length > 0 && (
+        <div>
+          <h2 className="text-d3">Already reviewed</h2>
+          <ul className="mt-5 grid gap-px border-l border-t border-line sm:grid-cols-2">
+            {done.map((r) => (
+              <li key={r.id} className="flex items-center gap-4 border-b border-r border-line bg-paper p-5">
+                <Img src={r.hero_image} alt="" className="h-16 w-16 shrink-0 border border-line object-cover" />
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[1.02rem]">{r.name}</h3>
+                  <p className="nums text-tiny text-soft">
+                    {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                    {!r.is_approved && ' · waiting to be published'}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Orders({ orders }) {
   if (!orders.length)
     return (

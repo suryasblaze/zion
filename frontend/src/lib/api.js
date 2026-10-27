@@ -76,6 +76,11 @@ export const api = {
 
   // ---- password recovery. forgotPassword answers the same way whether
   // or not the address exists, so there is nothing to branch on here.
+  // ---- reviews
+  addReview: (slug, body) =>
+    request(`/products/${encodeURIComponent(slug)}/reviews`, { method: 'POST', body, auth: true }),
+  reviewable: () => request('/me/reviewable', { auth: true }),
+
   forgotPassword: (body) => request('/auth/password/forgot', { method: 'POST', body }),
   checkResetToken: (token) => request(`/auth/password/reset/${encodeURIComponent(token)}`),
   resetPassword: (body) => request('/auth/password/reset', { method: 'POST', body }),
