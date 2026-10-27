@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { accentStyle, inr } from '../lib/format'
+import Stars from './Stars'
 import Img from './Img'
 
 /**
@@ -56,6 +57,7 @@ export default function ProductDetailPanel({ product, onAdd, onClose, id }) {
             {product.botanical && (
               <p className="text-tiny italic text-soft">{product.botanical}</p>
             )}
+            <Stars value={product.rating} count={product.ratingCount} className="mt-2" />
             <p className="mt-2 max-w-[62ch] text-soft">{product.short}</p>
           </header>
 

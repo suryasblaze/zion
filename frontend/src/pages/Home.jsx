@@ -7,6 +7,7 @@ import { FAQS } from '../data/catalog'
 import { useCatalog, useCart, useSettings } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
 import Img, { preloadSrc } from '../components/Img'
+import Stars from '../components/Stars'
 
 const SLIDE_MS = 5000
 
@@ -426,6 +427,7 @@ function ProductCard({ product, onAdd, open, onToggle }) {
           <Link to={`/product/${product.slug}`}>{product.name}</Link>
         </h3>
         <p className="text-tiny text-soft">{product.tagline}</p>
+        <Stars value={product.rating} count={product.ratingCount} className="mt-1.5" />
       </div>
 
       <p className="nums border-t border-line pt-3 text-tiny text-soft">

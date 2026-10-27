@@ -5,6 +5,7 @@ import { canonical } from '../lib/site'
 import { useCatalog, useCart } from '../context/StoreProvider'
 import { accentStyle, inr } from '../lib/format'
 import Img from '../components/Img'
+import Stars from '../components/Stars'
 
 const FILTERS = [
   { key: 'all', label: 'Everything' },
@@ -129,6 +130,9 @@ export default function Shop() {
                     <p className="mt-0.5 text-tiny italic text-soft">
                       {p.botanical || p.tagline}
                     </p>
+                    {/* Renders nothing until the product has a review,
+                        so a new tea does not advertise zero stars. */}
+                    <Stars value={p.rating} count={p.ratingCount} className="mt-2" />
                   </div>
 
                   <p className="max-w-[40ch] text-tiny text-soft">{p.short}</p>

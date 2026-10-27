@@ -124,6 +124,12 @@ export function productFromApi(p) {
     nutrition: nutritionLines(p.nutrition),
     love: p.why_love || null,
 
+    // Kept as numbers, and kept together: a rating without its count
+    // is a claim with no weight behind it. Maintained by a trigger on
+    // the reviews table, so these follow approvals automatically.
+    rating: Number(p.rating_avg) || 0,
+    ratingCount: Number(p.rating_count) || 0,
+
     accent: p.accent_color,
     accentSoft: p.accent_soft,
 
