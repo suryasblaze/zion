@@ -238,6 +238,31 @@ def pending_referral_for(user_id):
     )
 
 
+def standing_referral_for(user_id):
+    """
+    The referral behind a discount that applies to every order.
+
+    Unlike pending_referral_for this ignores whether the first order has
+    been placed -- the whole point of the recurring discount is that it
+    outlives it. rejected and reversed are still excluded: an admin
+    saying no has to mean no, here as everywhere else.
+
+    Flagged referrals earn nothing until approved, the same gate the
+    commission uses. Without that, a second account made on one device
+    would get a standing discount on everything it ever buys.
+    """
+    return db.query_one(
+        """select id, referrer_id, referee_discount_type, referee_discount_value,
+                  status, qualifying_order_id, fraud_flags
+             from referrals
+            where referee_id = %s
+              and status in ('pending', 'qualified', 'rewarded')
+            order by created_at
+            limit 1""",
+        (user_id,),
+    )
+
+
 def quote_referee_discount(user_id, subtotal):
     """
     The referred customer's first-order discount. Pure calculation;
@@ -249,7 +274,19 @@ def quote_referee_discount(user_id, subtotal):
     if not cfg["enabled"]:
         return blank
 
-    referral = pending_referral_for(user_id)
+    # When the discount is a standing arrangement, the "has this been
+    # used" questions below do not apply -- it is meant to be used again.
+    if cfg["referee_discount_every_order"]:
+        standing = standing_referral_for(user_id)
+        if not standing:
+            return blank
+        flags = standing["fraud_flags"] or []
+        if flags and not cfg["auto_approve_flagged"]:
+            return {**blank, "reason": "This account is being reviewed."}
+        referral = standing
+    else:
+        referral = pending_referral_for(user_id)
+
     if not referral:
         # Already used, or never referred. Only the former needs explaining.
         used = db.scalar(
@@ -262,8 +299,8 @@ def quote_referee_discount(user_id, subtotal):
                     "reason": "Your referral discount was used on your first order."}
         return blank
 
-    # First order only. Anything already paid disqualifies.
-    prior = db.scalar(
+    # First order only -- unless the discount is a standing one.
+    prior = 0 if cfg["referee_discount_every_order"] else db.scalar(
         """select count(*) from orders
             where user_id = %s and payment_status = 'paid'""",
         (user_id,),

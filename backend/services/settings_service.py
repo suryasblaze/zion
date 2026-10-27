@@ -129,6 +129,9 @@ def referral_config():
         "referee_discount_value": get_float("referral.referee_discount_value", 0),
         "referee_discount_max": get_float("referral.referee_discount_max", 0),
         "referee_min_order": get_float("referral.referee_min_order", 0),
+        # Off means the discount is a one-time welcome; on makes it a
+        # standing arrangement for as long as the account exists.
+        "referee_discount_every_order": get_bool("referral.referee_discount_every_order", False),
         "referrer_points": get_int("referral.referrer_points", 0),
         "referee_welcome_points": get_int("referral.referee_welcome_points", 0),
         "qualify_on": get_str("referral.qualify_on", "order_paid"),
