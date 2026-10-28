@@ -253,7 +253,7 @@ def standing_referral_for(user_id):
     """
     return db.query_one(
         """select id, referrer_id, referee_discount_type, referee_discount_value,
-                  status, qualifying_order_id, fraud_flags
+                  status, qualifying_order_id, fraud_flags, reviewed_at
              from referrals
             where referee_id = %s
               and status in ('pending', 'qualified', 'rewarded')
@@ -281,7 +281,7 @@ def quote_referee_discount(user_id, subtotal):
         if not standing:
             return blank
         flags = standing["fraud_flags"] or []
-        if flags and not cfg["auto_approve_flagged"]:
+        if flags and not standing["reviewed_at"] and not cfg["auto_approve_flagged"]:
             return {**blank, "reason": "This account is being reviewed."}
         referral = standing
     else:
@@ -465,8 +465,23 @@ def approve_flagged(referral_id, actor_id=None):
         referral = cur.fetchone()
         if not referral:
             return {"rewarded": False, "reason": "not_found"}
+        # Record the review before paying. The flags stay -- which one
+        # was raised is worth keeping -- but from here they no longer
+        # block the recurring commission or the standing discount, both
+        # of which refuse a flagged referral. Without this an approval
+        # paid once and the relationship earned nothing ever again.
+        cur.execute(
+            """update referrals
+                  set reviewed_at = coalesce(reviewed_at, now()),
+                      reviewed_by = coalesce(reviewed_by, %s)
+                where id = %s""",
+            (actor_id, referral_id),
+        )
+
         if referral["status"] == "rewarded":
-            return {"rewarded": False, "reason": "already_rewarded"}
+            # Already paid, but the review above still counts: it is
+            # what unblocks everything that follows.
+            return {"rewarded": False, "reason": "already_rewarded", "reviewed": True}
         if not referral["qualifying_order_id"]:
             return {"rewarded": False, "reason": "no_qualifying_order"}
         return _pay_referrer(cur, referral)
@@ -724,7 +739,7 @@ def on_order_rewards(order_id, force=False):
         # often what qualifies the referral, and on_order_paid runs
         # immediately before this does.
         cur.execute(
-            """select referrer_id, fraud_flags
+            """select referrer_id, fraud_flags, reviewed_at
                  from referrals
                 where referee_id = %s
                   and status in ('pending', 'qualified', 'rewarded')
@@ -735,7 +750,7 @@ def on_order_rewards(order_id, force=False):
 
         if link:
             flags = link["fraud_flags"] or []
-            if flags and not cfg["auto_approve_flagged"]:
+            if flags and not link["reviewed_at"] and not cfg["auto_approve_flagged"]:
                 paid.append({"kind": "commission", "paid": False,
                              "reason": "held_for_review", "flags": flags})
             elif str(link["referrer_id"]) != str(order["user_id"]):
