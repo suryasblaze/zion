@@ -371,6 +371,13 @@ def my_orders():
     rows = db.query(
         """select o.id, o.order_number, o.status, o.payment_status, o.payment_method,
                   o.total, o.currency, o.placed_at, o.tracking_number, o.tracking_url,
+                  -- What they saved, so the account page can show it.
+                  -- The total alone does not say whether a discount was
+                  -- applied, which is the one thing someone checks when
+                  -- they wonder if their referral link is working.
+                  o.subtotal, o.coupon_code, o.coupon_discount,
+                  o.referral_discount, o.coins_redeemed, o.coins_value,
+                  o.shipping_fee,
                   coalesce((
                     select json_agg(json_build_object(
                       'name', i.product_name, 'label', i.variant_label,

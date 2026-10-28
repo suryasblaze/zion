@@ -189,6 +189,7 @@ function Orders({ orders }) {
             </div>
             <div className="text-right">
               <p className="nums font-display text-[1.3rem]">{inr(o.total)}</p>
+              <Saved order={o} />
               <Status status={o.status} paid={o.payment_status} />
             </div>
           </div>
@@ -286,8 +287,43 @@ function Wallet({ wallet, ledger, coinName }) {
   )
 }
 
+/**
+ * What an order saved, under its total.
+ *
+ * The total on its own cannot answer "did my referral discount apply",
+ * which is exactly what someone opens this page to find out -- and the
+ * question that started this. Shown only when there is something to
+ * show, so an ordinary order stays a single line.
+ */
+function Saved({ order }) {
+  const parts = []
+  if (Number(order.referral_discount) > 0) {
+    parts.push(`${inr(order.referral_discount)} referral discount`)
+  }
+  if (Number(order.coupon_discount) > 0) {
+    parts.push(`${inr(order.coupon_discount)} coupon${order.coupon_code ? ` (${order.coupon_code})` : ''}`)
+  }
+  if (Number(order.coins_value) > 0) {
+    parts.push(`${inr(order.coins_value)} in coins`)
+  }
+  if (!parts.length) return null
+
+  return (
+    <p className="nums mt-1 text-tiny text-gold">
+      Saved {parts.join(' · ')}
+    </p>
+  )
+}
+
 const LEDGER_LABEL = {
   referral_reward: 'Referral reward',
+  // Per-order rewards. Without these the ledger printed the raw column
+  // value -- "self_cashback" -- at the customer, which is the sort of
+  // thing that makes a balance look like a mistake.
+  commission: 'Earned from a referral',
+  self_cashback: 'Cashback on your order',
+  commission_reversal: 'Referral earning reversed',
+  self_cashback_reversal: 'Cashback reversed',
   welcome_bonus: 'Welcome bonus',
   signup_bonus: 'Signup bonus',
   redeem: 'Spent at checkout',
